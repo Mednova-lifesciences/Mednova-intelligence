@@ -14,7 +14,194 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      opportunities: {
+        Row: {
+          category: string | null
+          close_date: string | null
+          company: string
+          created_at: string
+          estimated_value: number
+          id: string
+          opportunity_type: string | null
+          priority: string
+          probability: number
+          product_count: number
+          services: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          close_date?: string | null
+          company: string
+          created_at?: string
+          estimated_value?: number
+          id?: string
+          opportunity_type?: string | null
+          priority?: string
+          probability?: number
+          product_count?: number
+          services?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          close_date?: string | null
+          company?: string
+          created_at?: string
+          estimated_value?: number
+          id?: string
+          opportunity_type?: string | null
+          priority?: string
+          probability?: number
+          product_count?: number
+          services?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          applicant: string | null
+          approval_date: string | null
+          category: string | null
+          composition: string | null
+          created_at: string
+          dosage_form: string | null
+          expiry_date: string | null
+          id: string
+          last_synced: string
+          manufacturer: string | null
+          nafdac_number: string | null
+          pack_size: string | null
+          product_name: string
+          registration_date: string | null
+          route: string | null
+          status: string
+          strength: string | null
+          updated_at: string
+        }
+        Insert: {
+          applicant?: string | null
+          approval_date?: string | null
+          category?: string | null
+          composition?: string | null
+          created_at?: string
+          dosage_form?: string | null
+          expiry_date?: string | null
+          id?: string
+          last_synced?: string
+          manufacturer?: string | null
+          nafdac_number?: string | null
+          pack_size?: string | null
+          product_name: string
+          registration_date?: string | null
+          route?: string | null
+          status?: string
+          strength?: string | null
+          updated_at?: string
+        }
+        Update: {
+          applicant?: string | null
+          approval_date?: string | null
+          category?: string | null
+          composition?: string | null
+          created_at?: string
+          dosage_form?: string | null
+          expiry_date?: string | null
+          id?: string
+          last_synced?: string
+          manufacturer?: string | null
+          nafdac_number?: string | null
+          pack_size?: string | null
+          product_name?: string
+          registration_date?: string | null
+          route?: string | null
+          status?: string
+          strength?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      renewals: {
+        Row: {
+          applicant: string | null
+          category: string | null
+          created_at: string
+          expiry_date: string | null
+          id: string
+          nafdac_number: string | null
+          product_id: string | null
+          product_name: string
+          status: string
+        }
+        Insert: {
+          applicant?: string | null
+          category?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          nafdac_number?: string | null
+          product_id?: string | null
+          product_name: string
+          status?: string
+        }
+        Update: {
+          applicant?: string | null
+          category?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          nafdac_number?: string | null
+          product_id?: string | null
+          product_name?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "renewals_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sync_history: {
+        Row: {
+          created_at: string
+          finished_at: string
+          id: string
+          message: string | null
+          records_added: number
+          records_updated: number
+          started_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          finished_at?: string
+          id?: string
+          message?: string | null
+          records_added?: number
+          records_updated?: number
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          finished_at?: string
+          id?: string
+          message?: string | null
+          records_added?: number
+          records_updated?: number
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
