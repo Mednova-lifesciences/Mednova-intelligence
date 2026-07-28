@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { AppShell, Card, PageTitle, dash, naira } from "@/components/mednova/AppShell";
@@ -324,8 +324,8 @@ function Opportunities() {
                 </tr>
               )}
               {data?.rows.map((o) => (
-                <>
-                  <tr key={o.id} className="border-b border-border align-top">
+                <Fragment key={o.id}>
+                  <tr className="border-b border-border align-top">
                     <td className="px-3 py-3">{dash(o.opportunity_id)}</td>
                     <td className="px-3 py-3">
                       <div className="flex flex-wrap items-center gap-2">
@@ -353,13 +353,13 @@ function Opportunities() {
                     </td>
                   </tr>
                   {openId === o.id && (
-                    <tr key={`${o.id}-detail`} className="border-b border-border">
+                    <tr className="border-b border-border">
                       <td colSpan={COLUMNS.length} className="p-0">
                         <OpportunityDetail o={o} />
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>
