@@ -1,0 +1,1 @@
+ALTER FUNCTION public.dashboard_stats() SECURITY INVOKER;
