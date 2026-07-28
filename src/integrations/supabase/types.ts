@@ -21,12 +21,19 @@ export type Database = {
           company: string
           created_at: string
           estimated_value: number
+          expiry_date: string | null
           id: string
+          manufacturer: string | null
+          opportunity_id: number | null
           opportunity_type: string | null
           priority: string
           probability: number
+          product: string | null
           product_count: number
+          recommendation: string | null
+          service_type: string | null
           services: string | null
+          source_product_id: string | null
           status: string
           updated_at: string
         }
@@ -36,12 +43,19 @@ export type Database = {
           company: string
           created_at?: string
           estimated_value?: number
+          expiry_date?: string | null
           id?: string
+          manufacturer?: string | null
+          opportunity_id?: number | null
           opportunity_type?: string | null
           priority?: string
           probability?: number
+          product?: string | null
           product_count?: number
+          recommendation?: string | null
+          service_type?: string | null
           services?: string | null
+          source_product_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -51,16 +65,31 @@ export type Database = {
           company?: string
           created_at?: string
           estimated_value?: number
+          expiry_date?: string | null
           id?: string
+          manufacturer?: string | null
+          opportunity_id?: number | null
           opportunity_type?: string | null
           priority?: string
           probability?: number
+          product?: string | null
           product_count?: number
+          recommendation?: string | null
+          service_type?: string | null
           services?: string | null
+          source_product_id?: string | null
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_source_product_id_fkey"
+            columns: ["source_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -208,6 +237,7 @@ export type Database = {
     }
     Functions: {
       dashboard_stats: { Args: never; Returns: Json }
+      opportunity_stats: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never
