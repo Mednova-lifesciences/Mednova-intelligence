@@ -420,8 +420,10 @@ function CompanyDetail() {
         </CrmCard>
 
         {draftEmail && (
+          <div ref={emailRef} className="scroll-mt-6">
           <CrmCard>
             <h2 className="text-base font-bold text-foreground">Generated outreach email</h2>
+
             <div className="mt-3 grid gap-3">
               <input
                 className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
