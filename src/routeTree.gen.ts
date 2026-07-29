@@ -25,6 +25,7 @@ import { Route as CrmActivitiesRouteImport } from './routes/crm/activities'
 import { Route as CrmIcsrIndexRouteImport } from './routes/crm/icsr/index'
 import { Route as CrmEmailsIndexRouteImport } from './routes/crm/emails/index'
 import { Route as CrmCompaniesIndexRouteImport } from './routes/crm/companies/index'
+import { Route as CrmIcsrPerformanceRouteImport } from './routes/crm/icsr/performance'
 import { Route as CrmIcsrNewRouteImport } from './routes/crm/icsr/new'
 import { Route as CrmIcsrIdRouteImport } from './routes/crm/icsr/$id'
 import { Route as CrmEmailsComposeRouteImport } from './routes/crm/emails/compose'
@@ -110,6 +111,11 @@ const CrmCompaniesIndexRoute = CrmCompaniesIndexRouteImport.update({
   path: '/crm/companies/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrmIcsrPerformanceRoute = CrmIcsrPerformanceRouteImport.update({
+  id: '/crm/icsr/performance',
+  path: '/crm/icsr/performance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrmIcsrNewRoute = CrmIcsrNewRouteImport.update({
   id: '/crm/icsr/new',
   path: '/crm/icsr/new',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
   '/crm/icsr/$id': typeof CrmIcsrIdRoute
   '/crm/icsr/new': typeof CrmIcsrNewRoute
+  '/crm/icsr/performance': typeof CrmIcsrPerformanceRoute
   '/crm/companies/': typeof CrmCompaniesIndexRoute
   '/crm/emails/': typeof CrmEmailsIndexRoute
   '/crm/icsr/': typeof CrmIcsrIndexRoute
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
   '/crm/icsr/$id': typeof CrmIcsrIdRoute
   '/crm/icsr/new': typeof CrmIcsrNewRoute
+  '/crm/icsr/performance': typeof CrmIcsrPerformanceRoute
   '/crm/companies': typeof CrmCompaniesIndexRoute
   '/crm/emails': typeof CrmEmailsIndexRoute
   '/crm/icsr': typeof CrmIcsrIndexRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
   '/crm/icsr/$id': typeof CrmIcsrIdRoute
   '/crm/icsr/new': typeof CrmIcsrNewRoute
+  '/crm/icsr/performance': typeof CrmIcsrPerformanceRoute
   '/crm/companies/': typeof CrmCompaniesIndexRoute
   '/crm/emails/': typeof CrmEmailsIndexRoute
   '/crm/icsr/': typeof CrmIcsrIndexRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/crm/emails/compose'
     | '/crm/icsr/$id'
     | '/crm/icsr/new'
+    | '/crm/icsr/performance'
     | '/crm/companies/'
     | '/crm/emails/'
     | '/crm/icsr/'
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/crm/emails/compose'
     | '/crm/icsr/$id'
     | '/crm/icsr/new'
+    | '/crm/icsr/performance'
     | '/crm/companies'
     | '/crm/emails'
     | '/crm/icsr'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/crm/emails/compose'
     | '/crm/icsr/$id'
     | '/crm/icsr/new'
+    | '/crm/icsr/performance'
     | '/crm/companies/'
     | '/crm/emails/'
     | '/crm/icsr/'
@@ -285,6 +297,7 @@ export interface RootRouteChildren {
   CrmEmailsComposeRoute: typeof CrmEmailsComposeRoute
   CrmIcsrIdRoute: typeof CrmIcsrIdRoute
   CrmIcsrNewRoute: typeof CrmIcsrNewRoute
+  CrmIcsrPerformanceRoute: typeof CrmIcsrPerformanceRoute
   CrmCompaniesIndexRoute: typeof CrmCompaniesIndexRoute
   CrmEmailsIndexRoute: typeof CrmEmailsIndexRoute
   CrmIcsrIndexRoute: typeof CrmIcsrIndexRoute
@@ -404,6 +417,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmCompaniesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/icsr/performance': {
+      id: '/crm/icsr/performance'
+      path: '/crm/icsr/performance'
+      fullPath: '/crm/icsr/performance'
+      preLoaderRoute: typeof CrmIcsrPerformanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crm/icsr/new': {
       id: '/crm/icsr/new'
       path: '/crm/icsr/new'
@@ -453,6 +473,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrmEmailsComposeRoute: CrmEmailsComposeRoute,
   CrmIcsrIdRoute: CrmIcsrIdRoute,
   CrmIcsrNewRoute: CrmIcsrNewRoute,
+  CrmIcsrPerformanceRoute: CrmIcsrPerformanceRoute,
   CrmCompaniesIndexRoute: CrmCompaniesIndexRoute,
   CrmEmailsIndexRoute: CrmEmailsIndexRoute,
   CrmIcsrIndexRoute: CrmIcsrIndexRoute,
