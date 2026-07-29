@@ -158,6 +158,23 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+
+  button,
+  a,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"] {
+    cursor: pointer;
+  }
+
+  /* Keep text cursor for inputs, textareas, and disabled controls */
+  input,
+  textarea,
+  select,
+  [disabled] {
+    cursor: auto;
+  }
 }
 
 @media print {
