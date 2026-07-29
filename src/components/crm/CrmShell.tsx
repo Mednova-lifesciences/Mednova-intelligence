@@ -14,7 +14,6 @@ import {
   StickyNote,
   Search,
   Bell,
-  Sparkles,
   FileText,
 } from "lucide-react";
 
