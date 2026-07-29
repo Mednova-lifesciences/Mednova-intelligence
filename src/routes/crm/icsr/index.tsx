@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Download, ShieldAlert } from "lucide-react";
+import { Plus, Download, ShieldAlert, Activity } from "lucide-react";
 import { CrmShell, CrmHeader, btnPrimary, btnGhost, inputClass } from "@/components/crm/CrmShell";
 import {
   fetchCases,
