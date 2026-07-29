@@ -16,6 +16,7 @@ import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as CrmIndexRouteImport } from './routes/crm/index'
 import { Route as ProductsIdRouteImport } from './routes/products/$id'
 import { Route as CrmTasksRouteImport } from './routes/crm/tasks'
+import { Route as CrmReportsRouteImport } from './routes/crm/reports'
 import { Route as CrmPipelineRouteImport } from './routes/crm/pipeline'
 import { Route as CrmContactsRouteImport } from './routes/crm/contacts'
 import { Route as CrmActivitiesRouteImport } from './routes/crm/activities'
@@ -58,6 +59,11 @@ const CrmTasksRoute = CrmTasksRouteImport.update({
   path: '/crm/tasks',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrmReportsRoute = CrmReportsRouteImport.update({
+  id: '/crm/reports',
+  path: '/crm/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrmPipelineRoute = CrmPipelineRouteImport.update({
   id: '/crm/pipeline',
   path: '/crm/pipeline',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/crm/activities': typeof CrmActivitiesRoute
   '/crm/contacts': typeof CrmContactsRoute
   '/crm/pipeline': typeof CrmPipelineRoute
+  '/crm/reports': typeof CrmReportsRoute
   '/crm/tasks': typeof CrmTasksRoute
   '/products/$id': typeof ProductsIdRoute
   '/crm/': typeof CrmIndexRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/crm/activities': typeof CrmActivitiesRoute
   '/crm/contacts': typeof CrmContactsRoute
   '/crm/pipeline': typeof CrmPipelineRoute
+  '/crm/reports': typeof CrmReportsRoute
   '/crm/tasks': typeof CrmTasksRoute
   '/products/$id': typeof ProductsIdRoute
   '/crm': typeof CrmIndexRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/crm/activities': typeof CrmActivitiesRoute
   '/crm/contacts': typeof CrmContactsRoute
   '/crm/pipeline': typeof CrmPipelineRoute
+  '/crm/reports': typeof CrmReportsRoute
   '/crm/tasks': typeof CrmTasksRoute
   '/products/$id': typeof ProductsIdRoute
   '/crm/': typeof CrmIndexRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/crm/activities'
     | '/crm/contacts'
     | '/crm/pipeline'
+    | '/crm/reports'
     | '/crm/tasks'
     | '/products/$id'
     | '/crm/'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/crm/activities'
     | '/crm/contacts'
     | '/crm/pipeline'
+    | '/crm/reports'
     | '/crm/tasks'
     | '/products/$id'
     | '/crm'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/crm/activities'
     | '/crm/contacts'
     | '/crm/pipeline'
+    | '/crm/reports'
     | '/crm/tasks'
     | '/products/$id'
     | '/crm/'
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   CrmActivitiesRoute: typeof CrmActivitiesRoute
   CrmContactsRoute: typeof CrmContactsRoute
   CrmPipelineRoute: typeof CrmPipelineRoute
+  CrmReportsRoute: typeof CrmReportsRoute
   CrmTasksRoute: typeof CrmTasksRoute
   ProductsIdRoute: typeof ProductsIdRoute
   CrmIndexRoute: typeof CrmIndexRoute
@@ -250,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmTasksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/reports': {
+      id: '/crm/reports'
+      path: '/crm/reports'
+      fullPath: '/crm/reports'
+      preLoaderRoute: typeof CrmReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crm/pipeline': {
       id: '/crm/pipeline'
       path: '/crm/pipeline'
@@ -302,6 +322,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrmActivitiesRoute: CrmActivitiesRoute,
   CrmContactsRoute: CrmContactsRoute,
   CrmPipelineRoute: CrmPipelineRoute,
+  CrmReportsRoute: CrmReportsRoute,
   CrmTasksRoute: CrmTasksRoute,
   ProductsIdRoute: ProductsIdRoute,
   CrmIndexRoute: CrmIndexRoute,
