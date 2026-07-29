@@ -14,6 +14,298 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_type: string
+          company_id: string | null
+          created_at: string
+          id: string
+          message: string
+        }
+        Insert: {
+          activity_type: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          message: string
+        }
+        Update: {
+          activity_type?: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          category: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          estimated_value: number
+          id: string
+          last_activity_at: string
+          linkedin: string | null
+          manufacturer: string | null
+          name: string
+          next_followup_date: string | null
+          phone: string | null
+          portfolio: string | null
+          priority: string | null
+          probability: number
+          product: string | null
+          score: number
+          source_opportunity_id: string | null
+          stage: string
+          status: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          category?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          estimated_value?: number
+          id?: string
+          last_activity_at?: string
+          linkedin?: string | null
+          manufacturer?: string | null
+          name: string
+          next_followup_date?: string | null
+          phone?: string | null
+          portfolio?: string | null
+          priority?: string | null
+          probability?: number
+          product?: string | null
+          score?: number
+          source_opportunity_id?: string | null
+          stage?: string
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          category?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          estimated_value?: number
+          id?: string
+          last_activity_at?: string
+          linkedin?: string | null
+          manufacturer?: string | null
+          name?: string
+          next_followup_date?: string | null
+          phone?: string | null
+          portfolio?: string | null
+          priority?: string | null
+          probability?: number
+          product?: string | null
+          score?: number
+          source_opportunity_id?: string | null
+          stage?: string
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_source_opportunity_id_fkey"
+            columns: ["source_opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contacts: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          department: string | null
+          email: string | null
+          id: string
+          linkedin: string | null
+          name: string
+          phone: string | null
+          role: string | null
+          source: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          id?: string
+          linkedin?: string | null
+          name: string
+          phone?: string | null
+          role?: string | null
+          source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          id?: string
+          linkedin?: string | null
+          name?: string
+          phone?: string | null
+          role?: string | null
+          source?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emails: {
+        Row: {
+          bcc_address: string | null
+          body: string | null
+          cc_address: string | null
+          company_id: string | null
+          contact_id: string | null
+          created_at: string
+          id: string
+          sent_at: string | null
+          signature: string | null
+          status: string
+          subject: string | null
+          to_address: string | null
+          updated_at: string
+        }
+        Insert: {
+          bcc_address?: string | null
+          body?: string | null
+          cc_address?: string | null
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          sent_at?: string | null
+          signature?: string | null
+          status?: string
+          subject?: string | null
+          to_address?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bcc_address?: string | null
+          body?: string | null
+          cc_address?: string | null
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          sent_at?: string | null
+          signature?: string | null
+          status?: string
+          subject?: string | null
+          to_address?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emails_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emails_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      followups: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          note: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "followups_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          body: string
+          company_id: string | null
+          created_at: string
+          id: string
+        }
+        Insert: {
+          body: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          body?: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opportunities: {
         Row: {
           category: string | null
@@ -87,6 +379,38 @@ export type Database = {
             columns: ["source_product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pipeline_stage_history: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          from_stage: string | null
+          id: string
+          to_stage: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          from_stage?: string | null
+          id?: string
+          to_stage: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          from_stage?: string | null
+          id?: string
+          to_stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_stage_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -198,6 +522,27 @@ export type Database = {
           },
         ]
       }
+      reports: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       sync_history: {
         Row: {
           created_at: string
@@ -231,13 +576,65 @@ export type Database = {
         }
         Relationships: []
       }
+      tasks: {
+        Row: {
+          assignee: string | null
+          company_id: string | null
+          completed_at: string | null
+          created_at: string
+          deleted_at: string | null
+          due_date: string | null
+          id: string
+          state: string
+          task_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee?: string | null
+          company_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          due_date?: string | null
+          id?: string
+          state?: string
+          task_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee?: string | null
+          company_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          due_date?: string | null
+          id?: string
+          state?: string
+          task_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      crm_dashboard_stats: { Args: never; Returns: Json }
       dashboard_stats: { Args: never; Returns: Json }
       opportunity_stats: { Args: never; Returns: Json }
+      purge_deleted_tasks: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
