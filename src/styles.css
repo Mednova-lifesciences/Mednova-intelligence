@@ -63,6 +63,9 @@
   --color-navy-foreground: var(--navy-foreground);
   --color-navy-muted: var(--navy-muted);
   --color-canvas: var(--canvas);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
 }
 
 
@@ -74,6 +77,10 @@
   --navy-foreground: oklch(1 0 0);
   --navy-muted: oklch(0.82 0.02 258);
   --canvas: oklch(0.972 0.007 250);
+  --brand: oklch(0.55 0.2 258);
+  --brand-foreground: oklch(1 0 0);
+  --brand-soft: oklch(0.95 0.03 250);
+
 
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);

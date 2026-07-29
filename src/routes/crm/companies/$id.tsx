@@ -1,0 +1,393 @@
+import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { CrmShell, CrmHeader, CrmCard, btnPrimary, btnGhost, ngn } from "@/components/crm/CrmShell";
+import {
+  fetchCompany,
+  fetchCompanyOpportunities,
+  fetchCompanyProducts,
+  fetchContacts,
+  fetchActivities,
+  fetchStageHistory,
+  insertContacts,
+  moveCompanyStage,
+  PIPELINE_STAGES,
+  type PipelineStage,
+} from "@/lib/crm-queries";
+import { getCompanyIntelligence, discoverContacts, generateEmail } from "@/lib/crm-integrations.functions";
+
+export const Route = createFileRoute("/crm/companies/$id")({
+  head: () => ({
+    meta: [
+      { title: "Company profile | MedNovaOS CRM" },
+      { name: "description", content: "Company overview, products, opportunity history, intelligence, contacts and outreach." },
+      { property: "og:title", content: "Company profile | MedNovaOS CRM" },
+      { property: "og:description", content: "CRM company profile with intelligence and outreach tools." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: CompanyDetail,
+});
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-background px-4 py-3">
+      <div className="text-xs font-semibold tracking-wide text-muted-foreground">{label}</div>
+      <div className="mt-1 text-sm font-medium text-foreground">{value || "—"}</div>
+    </div>
+  );
+}
+
+function CompanyDetail() {
+  const { id } = Route.useParams();
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+
+  const loadIntel = useServerFn(getCompanyIntelligence);
+  const loadContacts = useServerFn(discoverContacts);
+  const makeEmail = useServerFn(generateEmail);
+
+  const [draftEmail, setDraftEmail] = useState<{
+    subject: string;
+    recipient: string;
+    body: string;
+    signature: string;
+  } | null>(null);
+
+  const { data: company } = useQuery({ queryKey: ["crm-company", id], queryFn: () => fetchCompany(id) });
+  const { data: contacts } = useQuery({
+    queryKey: ["crm-contacts", "company", id],
+    queryFn: () => fetchContacts({ companyId: id }),
+  });
+  const { data: opportunities } = useQuery({
+    queryKey: ["crm-company-opps", id],
+    queryFn: () => (company ? fetchCompanyOpportunities(company) : Promise.resolve([])),
+    enabled: !!company,
+  });
+  const { data: products } = useQuery({
+    queryKey: ["crm-company-products", id],
+    queryFn: () => (company ? fetchCompanyProducts(company) : Promise.resolve([])),
+    enabled: !!company,
+  });
+  const { data: intel, isFetching: intelLoading } = useQuery({
+    queryKey: ["crm-intel", id],
+    queryFn: () => loadIntel({ data: { name: company!.name, manufacturer: company!.manufacturer } }),
+    enabled: !!company,
+  });
+  const { data: activities } = useQuery({
+    queryKey: ["crm-activities", id],
+    queryFn: () => fetchActivities(20, id),
+  });
+  const { data: history } = useQuery({ queryKey: ["crm-stage-history", id], queryFn: () => fetchStageHistory(id) });
+
+  if (!company) {
+    return (
+      <CrmShell>
+        <CrmHeader title="Company" subtitle="Loading…" />
+      </CrmShell>
+    );
+  }
+
+  const onDiscoverContacts = async () => {
+    const found = await loadContacts({ data: { name: company.name } });
+    await insertContacts(found.map((c) => ({ ...c, company_id: company.id })));
+    qc.invalidateQueries({ queryKey: ["crm-contacts"] });
+  };
+
+  const onGenerateEmail = async () => {
+    const primary = (contacts ?? [])[0];
+    const result = await makeEmail({
+      data: {
+        company: company.name,
+        contactName: primary?.name ?? null,
+        contactEmail: primary?.email ?? intel?.email ?? null,
+        category: company.category,
+        product: company.product,
+        recommendation: (opportunities?.[0] as { recommendation?: string } | undefined)?.recommendation ?? null,
+      },
+    });
+    setDraftEmail(result);
+  };
+
+  const onStageChange = async (stage: PipelineStage) => {
+    await moveCompanyStage(company, stage);
+    qc.invalidateQueries({ queryKey: ["crm-company", id] });
+    qc.invalidateQueries({ queryKey: ["crm-companies"] });
+    qc.invalidateQueries({ queryKey: ["crm-stats"] });
+    qc.invalidateQueries({ queryKey: ["crm-activities"] });
+    qc.invalidateQueries({ queryKey: ["crm-stage-history", id] });
+  };
+
+  return (
+    <CrmShell>
+      <CrmHeader
+        title={company.name}
+        subtitle={`${company.category ?? "Biopharma"} · ${company.stage} · ${ngn(company.estimated_value)}`}
+        actions={
+          <>
+            <select
+              className="h-10 rounded-lg border border-border bg-card px-3 text-sm"
+              value={company.stage}
+              onChange={(e) => onStageChange(e.target.value as PipelineStage)}
+            >
+              {PIPELINE_STAGES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <button className={btnPrimary} onClick={onGenerateEmail}>
+              Generate email
+            </button>
+          </>
+        }
+      />
+
+      <div className="space-y-6 px-8 py-6">
+        <CrmCard>
+          <h2 className="text-base font-bold text-foreground">Company overview</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Field label="Company name" value={company.name} />
+            <Field label="Manufacturer" value={company.manufacturer ?? ""} />
+            <Field label="Country" value={company.country ?? "Unknown"} />
+            <Field label="Category" value={company.category ?? ""} />
+            <Field label="Portfolio" value={company.portfolio ?? ""} />
+            <Field label="Estimated revenue" value={ngn(company.estimated_value)} />
+            <Field label="Priority" value={company.priority ?? ""} />
+            <Field label="Probability" value={`${company.probability}%`} />
+            <Field label="Pipeline stage" value={company.stage} />
+            <Field label="Created date" value={new Date(company.created_at).toLocaleString()} />
+            <Field label="Status" value={company.status} />
+            <Field label="Score" value={String(company.score)} />
+          </div>
+        </CrmCard>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <CrmCard>
+            <h2 className="text-base font-bold text-foreground">Products</h2>
+            <div className="mt-3 divide-y divide-border text-sm">
+              {(products ?? []).length === 0 && <p className="py-4 text-muted-foreground">No linked products.</p>}
+              {(products ?? []).map((p) => (
+                <Link
+                  key={p.id}
+                  to="/products/$id"
+                  params={{ id: p.id }}
+                  className="flex items-center justify-between py-2 hover:text-brand"
+                >
+                  <span>{p.product_name}</span>
+                  <span className="text-xs text-muted-foreground">{p.expiry_date ?? "—"}</span>
+                </Link>
+              ))}
+            </div>
+          </CrmCard>
+
+          <CrmCard>
+            <h2 className="text-base font-bold text-foreground">Opportunity history</h2>
+            <div className="mt-3 divide-y divide-border text-sm">
+              {(opportunities ?? []).length === 0 && (
+                <p className="py-4 text-muted-foreground">No opportunities found.</p>
+              )}
+              {(opportunities ?? []).map((o) => {
+                const row = o as { id: string; service_type: string | null; estimated_value: number; priority: string };
+                return (
+                  <div key={row.id} className="flex items-center justify-between py-2">
+                    <span>{row.service_type ?? "Opportunity"}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {ngn(row.estimated_value)} · {row.priority}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </CrmCard>
+        </div>
+
+        <CrmCard>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-base font-bold text-foreground">Company intelligence</h2>
+            <span className="text-xs text-muted-foreground">
+              {intelLoading ? "Loading…" : intel?.placeholder ? "Placeholder data — connect Tavily to go live" : "Live via Tavily"}
+            </span>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Field label="Company website" value={intel?.website ?? ""} />
+            <Field label="Company email" value={intel?.email ?? ""} />
+            <Field label="Phone" value={intel?.phone ?? ""} />
+            <Field label="LinkedIn" value={intel?.linkedin ?? ""} />
+            <Field label="NAFDAC presence" value={intel?.nafdac_presence ?? ""} />
+            <Field label="Market position" value={intel?.market_position ?? ""} />
+          </div>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            <div className="rounded-lg border border-border bg-background p-4">
+              <div className="text-xs font-semibold text-muted-foreground">About company</div>
+              <p className="mt-1 text-sm">{intel?.about ?? "—"}</p>
+              <div className="mt-3 text-xs font-semibold text-muted-foreground">Business description</div>
+              <p className="mt-1 text-sm">{intel?.business_description ?? "—"}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background p-4">
+              <div className="text-xs font-semibold text-muted-foreground">Recent news</div>
+              <ul className="mt-1 list-disc pl-5 text-sm">
+                {(intel?.recent_news ?? []).map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+              <div className="mt-3 text-xs font-semibold text-muted-foreground">Commercial insights</div>
+              <ul className="mt-1 list-disc pl-5 text-sm">
+                {(intel?.commercial_insights ?? []).map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-lg border border-border bg-background p-4">
+              <div className="text-xs font-semibold text-muted-foreground">Key executives</div>
+              <ul className="mt-1 text-sm">
+                {(intel?.key_executives ?? []).map((e, i) => (
+                  <li key={i}>
+                    {e.name} — {e.role}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-lg border border-border bg-background p-4">
+              <div className="text-xs font-semibold text-muted-foreground">Decision makers</div>
+              <ul className="mt-1 text-sm">
+                {(intel?.decision_makers ?? []).map((e, i) => (
+                  <li key={i}>
+                    {e.name} — {e.role}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </CrmCard>
+
+        <CrmCard>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-base font-bold text-foreground">Contacts</h2>
+            <button className={btnGhost} onClick={onDiscoverContacts}>
+              Discover contacts
+            </button>
+          </div>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-muted-foreground">
+                  <th className="px-3 py-2 font-medium">Name</th>
+                  <th className="px-3 py-2 font-medium">Role</th>
+                  <th className="px-3 py-2 font-medium">Email</th>
+                  <th className="px-3 py-2 font-medium">Phone</th>
+                  <th className="px-3 py-2 font-medium">LinkedIn</th>
+                  <th className="px-3 py-2 font-medium">Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(contacts ?? []).length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
+                      No contacts yet.
+                    </td>
+                  </tr>
+                )}
+                {(contacts ?? []).map((c) => (
+                  <tr key={c.id} className="border-b border-border last:border-0">
+                    <td className="px-3 py-2 font-medium">{c.name}</td>
+                    <td className="px-3 py-2">{c.role ?? "—"}</td>
+                    <td className="px-3 py-2">{c.email ?? "—"}</td>
+                    <td className="px-3 py-2">{c.phone ?? "—"}</td>
+                    <td className="max-w-[200px] truncate px-3 py-2 text-brand">{c.linkedin ?? "—"}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{c.source ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CrmCard>
+
+        {draftEmail && (
+          <CrmCard>
+            <h2 className="text-base font-bold text-foreground">Generated outreach email</h2>
+            <div className="mt-3 grid gap-3">
+              <input
+                className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+                value={draftEmail.recipient}
+                onChange={(e) => setDraftEmail({ ...draftEmail, recipient: e.target.value })}
+                placeholder="Recipient"
+              />
+              <input
+                className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+                value={draftEmail.subject}
+                onChange={(e) => setDraftEmail({ ...draftEmail, subject: e.target.value })}
+                placeholder="Subject"
+              />
+              <textarea
+                className="min-h-[200px] rounded-lg border border-border bg-background p-3 text-sm"
+                value={draftEmail.body}
+                onChange={(e) => setDraftEmail({ ...draftEmail, body: e.target.value })}
+              />
+              <textarea
+                className="min-h-[80px] rounded-lg border border-border bg-background p-3 text-sm"
+                value={draftEmail.signature}
+                onChange={(e) => setDraftEmail({ ...draftEmail, signature: e.target.value })}
+              />
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button
+                className={btnPrimary}
+                onClick={() =>
+                  navigate({
+                    to: "/crm/emails/compose",
+                    search: {
+                      companyId: company.id,
+                      to: draftEmail.recipient,
+                      subject: draftEmail.subject,
+                      body: draftEmail.body,
+                      signature: draftEmail.signature,
+                    },
+                  })
+                }
+              >
+                Send email
+              </button>
+            </div>
+          </CrmCard>
+        )}
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <CrmCard>
+            <h2 className="text-base font-bold text-foreground">Activity</h2>
+            <div className="mt-3 divide-y divide-border text-sm">
+              {(activities ?? []).length === 0 && <p className="py-4 text-muted-foreground">No activity yet.</p>}
+              {(activities ?? []).map((a) => (
+                <div key={a.id} className="flex items-center justify-between py-2">
+                  <span>{a.message}</span>
+                  <span className="text-xs text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
+                </div>
+              ))}
+            </div>
+          </CrmCard>
+          <CrmCard>
+            <h2 className="text-base font-bold text-foreground">Pipeline history</h2>
+            <div className="mt-3 divide-y divide-border text-sm">
+              {(history ?? []).length === 0 && <p className="py-4 text-muted-foreground">No stage changes.</p>}
+              {(history ?? []).map((h) => {
+                const row = h as { id: string; from_stage: string | null; to_stage: string; created_at: string };
+                return (
+                  <div key={row.id} className="flex items-center justify-between py-2">
+                    <span>
+                      {row.from_stage ?? "New"} → {row.to_stage}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(row.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </CrmCard>
+        </div>
+      </div>
+    </CrmShell>
+  );
+}
