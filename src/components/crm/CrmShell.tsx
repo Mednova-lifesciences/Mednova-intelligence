@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import logo from "@/assets/mednova-logo.png.asset.json";
-import type { ReactNode } from "react";
 import { useState } from "react";
+import type { ReactNode } from "react";
+
+const logo = new URL("../../../image.png", import.meta.url).href;
 import {
   LayoutGrid,
   Building2,
@@ -45,9 +46,9 @@ export function CrmShell({ children }: { children: ReactNode }) {
         <div className="flex items-center gap-3 border-b border-white/5 px-5 py-4">
           <div>
             <img
-              src={logo.url}
+              src={logo}
               alt="MedNova Lifesciences logo"
-              className="h-7 w-auto brightness-0 invert"
+              className="h-7 w-auto invert brightness-0"
             />
             <div className="mt-1 text-[11px] font-semibold tracking-widest text-navy-muted">CRM WORKSPACE</div>
           </div>

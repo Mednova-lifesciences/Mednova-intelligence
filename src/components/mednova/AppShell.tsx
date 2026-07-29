@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import logo from "@/assets/mednova-logo.png.asset.json";
 import type { ReactNode } from "react";
+
+const logo = new URL("../../../image.png", import.meta.url).href;
 
 const NAV = [
   { to: "/", label: "Dashboard" },
@@ -17,9 +18,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex flex-wrap items-center justify-between gap-3 px-8 py-4">
           <div>
             <img
-              src={logo.url}
+              src={logo}
               alt="MedNova Lifesciences logo"
-              className="h-8 w-auto brightness-0 invert"
+              className="h-8 w-auto invert brightness-0"
             />
             <div className="text-xs font-semibold text-navy-muted">
               NAFDAC Intelligence &amp; Revenue Engine
