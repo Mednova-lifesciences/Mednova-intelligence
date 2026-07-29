@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -58,6 +58,9 @@ function CompanyDetail() {
     body: string;
     signature: string;
   } | null>(null);
+  const [generatingEmail, setGeneratingEmail] = useState(false);
+  const emailRef = useRef<HTMLDivElement | null>(null);
+  const [showAllOpps, setShowAllOpps] = useState<Record<string, boolean>>({});
 
   const { data: company } = useQuery({ queryKey: ["crm-company", id], queryFn: () => fetchCompany(id) });
   const { data: contacts } = useQuery({
@@ -106,19 +109,71 @@ function CompanyDetail() {
   };
 
   const onGenerateEmail = async () => {
-    const primary = (contacts ?? [])[0];
-    const result = await makeEmail({
-      data: {
-        company: company.name,
-        contactName: primary?.name ?? null,
-        contactEmail: primary?.email ?? intel?.email ?? null,
-        category: company.category,
-        product: company.product,
-        recommendation: (opportunities?.[0] as { recommendation?: string } | undefined)?.recommendation ?? null,
-      },
-    });
-    setDraftEmail(result);
+    setGeneratingEmail(true);
+    try {
+      const primary = (contacts ?? [])[0];
+      const result = await makeEmail({
+        data: {
+          company: company.name,
+          contactName: primary?.name ?? null,
+          contactEmail: primary?.email ?? intel?.email ?? null,
+          category: company.category,
+          product: company.product,
+          recommendation: (opportunities?.[0] as { recommendation?: string } | undefined)?.recommendation ?? null,
+        },
+      });
+      setDraftEmail(result);
+      requestAnimationFrame(() => emailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    } finally {
+      setGeneratingEmail(false);
+    }
   };
+
+  const onGenerateReport = () => {
+    const opps = (opportunities ?? []) as {
+      service_type: string | null;
+      product: string | null;
+      estimated_value: number;
+      priority: string;
+    }[];
+    const totalValue = opps.reduce((s, o) => s + Number(o.estimated_value || 0), 0);
+    const rows = opps
+      .map(
+        (o) =>
+          `<tr><td>${o.service_type ?? "Opportunity"}</td><td>${o.product ?? "—"}</td><td>${ngn(
+            o.estimated_value,
+          )}</td><td>${o.priority}</td></tr>`,
+      )
+      .join("");
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${company.name} — Company report</title>
+      <style>body{font-family:system-ui,sans-serif;color:#0f172a;padding:32px}h1{color:#071a2f}
+      table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+      th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:left}th{background:#f1f5f9}
+      .kpi{display:flex;gap:16px;margin:16px 0}.kpi div{border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px}</style>
+      </head><body>
+      <h1>${company.name}</h1>
+      <p>${company.category ?? "Biopharma"} · ${company.country ?? "Unknown"} · Stage: ${company.stage}</p>
+      <div class="kpi">
+        <div><strong>${opps.length}</strong><br/>Opportunities</div>
+        <div><strong>${ngn(totalValue)}</strong><br/>Pipeline value</div>
+        <div><strong>${company.probability}%</strong><br/>Probability</div>
+        <div><strong>${(products ?? []).length}</strong><br/>Products</div>
+        <div><strong>${(contacts ?? []).length}</strong><br/>Contacts</div>
+      </div>
+      <h2>Opportunities</h2>
+      <table><thead><tr><th>Service type</th><th>Product</th><th>Estimated value</th><th>Priority</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="4">No opportunities</td></tr>'}</tbody></table>
+      <p style="margin-top:24px;font-size:12px;color:#64748b">Generated ${new Date().toLocaleString()} · MedNovaOS</p>
+      </body></html>`;
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+      w.print();
+    }
+  };
+
 
   const onStageChange = async (stage: PipelineStage) => {
     await moveCompanyStage(company, stage);
@@ -147,9 +202,13 @@ function CompanyDetail() {
                 </option>
               ))}
             </select>
-            <button className={btnPrimary} onClick={onGenerateEmail}>
-              Generate email
+            <button className={btnGhost} onClick={onGenerateReport}>
+              Generate report
             </button>
+            <button className={btnPrimary} onClick={onGenerateEmail} disabled={generatingEmail}>
+              {generatingEmail ? "Generating…" : "Generate email"}
+            </button>
+
           </>
         }
       />
@@ -193,24 +252,70 @@ function CompanyDetail() {
           </CrmCard>
 
           <CrmCard>
-            <h2 className="text-base font-bold text-foreground">Opportunity history</h2>
-            <div className="mt-3 divide-y divide-border text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-base font-bold text-foreground">Opportunity history</h2>
+              <span className="text-xs text-muted-foreground">
+                {(opportunities ?? []).length} opportunit{(opportunities ?? []).length === 1 ? "y" : "ies"} · grouped by
+                service type
+              </span>
+            </div>
+            <div className="mt-3 space-y-4 text-sm">
               {(opportunities ?? []).length === 0 && (
                 <p className="py-4 text-muted-foreground">No opportunities found.</p>
               )}
-              {(opportunities ?? []).map((o) => {
-                const row = o as { id: string; service_type: string | null; estimated_value: number; priority: string };
+              {Object.entries(
+                ((opportunities ?? []) as {
+                  id: string;
+                  service_type: string | null;
+                  product: string | null;
+                  estimated_value: number;
+                  priority: string;
+                }[]).reduce<
+                  Record<
+                    string,
+                    { id: string; product: string | null; estimated_value: number; priority: string }[]
+                  >
+                >((acc, o) => {
+                  const key = o.service_type ?? "Opportunity";
+                  (acc[key] ??= []).push(o);
+                  return acc;
+                }, {}),
+              ).map(([type, rows]) => {
+                const total = rows.reduce((s, r) => s + Number(r.estimated_value || 0), 0);
+                const expanded = showAllOpps[type];
+                const visible = expanded ? rows : rows.slice(0, 5);
                 return (
-                  <div key={row.id} className="flex items-center justify-between py-2">
-                    <span>{row.service_type ?? "Opportunity"}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {ngn(row.estimated_value)} · {row.priority}
-                    </span>
+                  <div key={type} className="rounded-lg border border-border bg-background p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-foreground">
+                        {type} <span className="text-muted-foreground">({rows.length})</span>
+                      </span>
+                      <span className="text-xs text-muted-foreground">{ngn(total)} total</span>
+                    </div>
+                    <div className="mt-2 divide-y divide-border">
+                      {visible.map((r) => (
+                        <div key={r.id} className="flex items-center justify-between gap-3 py-1.5">
+                          <span className="truncate">{r.product ?? "—"}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            {ngn(r.estimated_value)} · {r.priority}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    {rows.length > 5 && (
+                      <button
+                        className="mt-2 text-xs font-semibold text-brand"
+                        onClick={() => setShowAllOpps((s) => ({ ...s, [type]: !expanded }))}
+                      >
+                        {expanded ? "Show less" : `Show all ${rows.length}`}
+                      </button>
+                    )}
                   </div>
                 );
               })}
             </div>
           </CrmCard>
+
         </div>
 
         <CrmCard>
@@ -315,8 +420,10 @@ function CompanyDetail() {
         </CrmCard>
 
         {draftEmail && (
+          <div ref={emailRef} className="scroll-mt-6">
           <CrmCard>
             <h2 className="text-base font-bold text-foreground">Generated outreach email</h2>
+
             <div className="mt-3 grid gap-3">
               <input
                 className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
@@ -361,6 +468,7 @@ function CompanyDetail() {
               </button>
             </div>
           </CrmCard>
+          </div>
         )}
 
         <CrmCard>
