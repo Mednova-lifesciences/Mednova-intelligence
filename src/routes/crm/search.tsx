@@ -20,14 +20,15 @@ export const Route = createFileRoute("/crm/search")({
 });
 
 async function globalSearch(q: string) {
-  if (!q.trim()) return { companies: [], contacts: [], tasks: [], emails: [], products: [] };
+  if (!q.trim()) return { companies: [], contacts: [], tasks: [], emails: [], products: [], cases: [] };
   const like = `%${q}%`;
-  const [companies, contacts, tasks, emails, products] = await Promise.all([
+  const [companies, contacts, tasks, emails, products, cases] = await Promise.all([
     fetchCompanies({ search: q }),
     fetchContacts({ search: q }),
     fetchTasks(),
     fetchEmails(),
     supabase.from("products").select("id, product_name, manufacturer").ilike("product_name", like).limit(15),
+    fetchCases({ search: q }),
   ]);
   return {
     companies,
@@ -37,8 +38,10 @@ async function globalSearch(q: string) {
       (e.subject ?? "").toLowerCase().includes(q.toLowerCase()),
     ),
     products: products.data ?? [],
+    cases: cases.slice(0, 25),
   };
 }
+
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
