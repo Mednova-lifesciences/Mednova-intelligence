@@ -17,22 +17,28 @@ export type Database = {
       activities: {
         Row: {
           activity_type: string
+          actor: string
           company_id: string | null
           created_at: string
+          description: string | null
           id: string
           message: string
         }
         Insert: {
           activity_type: string
+          actor?: string
           company_id?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           message: string
         }
         Update: {
           activity_type?: string
+          actor?: string
           company_id?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           message?: string
         }
@@ -191,7 +197,10 @@ export type Database = {
           contact_id: string | null
           created_at: string
           id: string
+          opened_at: string | null
+          replied_at: string | null
           sent_at: string | null
+          sent_by: string
           signature: string | null
           status: string
           subject: string | null
@@ -206,7 +215,10 @@ export type Database = {
           contact_id?: string | null
           created_at?: string
           id?: string
+          opened_at?: string | null
+          replied_at?: string | null
           sent_at?: string | null
+          sent_by?: string
           signature?: string | null
           status?: string
           subject?: string | null
@@ -221,7 +233,10 @@ export type Database = {
           contact_id?: string | null
           created_at?: string
           id?: string
+          opened_at?: string | null
+          replied_at?: string | null
           sent_at?: string | null
+          sent_by?: string
           signature?: string | null
           status?: string
           subject?: string | null
@@ -279,22 +294,34 @@ export type Database = {
       }
       notes: {
         Row: {
+          author: string
           body: string
           company_id: string | null
           created_at: string
           id: string
+          pinned: boolean
+          title: string
+          updated_at: string
         }
         Insert: {
+          author?: string
           body: string
           company_id?: string | null
           created_at?: string
           id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
         }
         Update: {
+          author?: string
           body?: string
           company_id?: string | null
           created_at?: string
           id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
         }
         Relationships: [
           {
