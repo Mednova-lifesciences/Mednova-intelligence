@@ -16,6 +16,7 @@ import {
   Bell,
   FileText,
   ShieldAlert,
+  ClipboardCheck,
 } from "lucide-react";
 
 const NAV = [
@@ -29,6 +30,7 @@ const NAV = [
   { to: "/crm/reports", label: "Reports", icon: BarChart3 },
   { to: "/crm/notes", label: "Notes", icon: StickyNote },
   { to: "/crm/icsr", label: "Pharmacovigilance", icon: ShieldAlert },
+  { to: "/crm/gap", label: "Gap Assessment", icon: ClipboardCheck },
 ] as const;
 
 

@@ -292,6 +292,95 @@ export type Database = {
           },
         ]
       }
+      gap_assessments: {
+        Row: {
+          assessment_date: string | null
+          assessor: string
+          client: string
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assessment_date?: string | null
+          assessor?: string
+          client?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          assessment_date?: string | null
+          assessor?: string
+          client?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gap_responses: {
+        Row: {
+          action: string
+          assessment_id: string
+          created_at: string
+          current_maturity: number | null
+          due_date: string | null
+          evidence: string
+          finding: string
+          id: string
+          owner: string
+          ref: string
+          risk: string
+          status: string
+          target_maturity: number
+          updated_at: string
+        }
+        Insert: {
+          action?: string
+          assessment_id: string
+          created_at?: string
+          current_maturity?: number | null
+          due_date?: string | null
+          evidence?: string
+          finding?: string
+          id?: string
+          owner?: string
+          ref: string
+          risk?: string
+          status?: string
+          target_maturity?: number
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          assessment_id?: string
+          created_at?: string
+          current_maturity?: number | null
+          due_date?: string | null
+          evidence?: string
+          finding?: string
+          id?: string
+          owner?: string
+          ref?: string
+          risk?: string
+          status?: string
+          target_maturity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gap_responses_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "gap_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       icsr_attachments: {
         Row: {
           case_id: string | null

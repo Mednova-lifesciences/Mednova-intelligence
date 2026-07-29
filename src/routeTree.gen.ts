@@ -23,11 +23,13 @@ import { Route as CrmNotesRouteImport } from './routes/crm/notes'
 import { Route as CrmContactsRouteImport } from './routes/crm/contacts'
 import { Route as CrmActivitiesRouteImport } from './routes/crm/activities'
 import { Route as CrmIcsrIndexRouteImport } from './routes/crm/icsr/index'
+import { Route as CrmGapIndexRouteImport } from './routes/crm/gap/index'
 import { Route as CrmEmailsIndexRouteImport } from './routes/crm/emails/index'
 import { Route as CrmCompaniesIndexRouteImport } from './routes/crm/companies/index'
 import { Route as CrmIcsrPerformanceRouteImport } from './routes/crm/icsr/performance'
 import { Route as CrmIcsrNewRouteImport } from './routes/crm/icsr/new'
 import { Route as CrmIcsrIdRouteImport } from './routes/crm/icsr/$id'
+import { Route as CrmGapIdRouteImport } from './routes/crm/gap/$id'
 import { Route as CrmEmailsComposeRouteImport } from './routes/crm/emails/compose'
 import { Route as CrmCompaniesIdRouteImport } from './routes/crm/companies/$id'
 
@@ -101,6 +103,11 @@ const CrmIcsrIndexRoute = CrmIcsrIndexRouteImport.update({
   path: '/crm/icsr/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrmGapIndexRoute = CrmGapIndexRouteImport.update({
+  id: '/crm/gap/',
+  path: '/crm/gap/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrmEmailsIndexRoute = CrmEmailsIndexRouteImport.update({
   id: '/crm/emails/',
   path: '/crm/emails/',
@@ -124,6 +131,11 @@ const CrmIcsrNewRoute = CrmIcsrNewRouteImport.update({
 const CrmIcsrIdRoute = CrmIcsrIdRouteImport.update({
   id: '/crm/icsr/$id',
   path: '/crm/icsr/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmGapIdRoute = CrmGapIdRouteImport.update({
+  id: '/crm/gap/$id',
+  path: '/crm/gap/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrmEmailsComposeRoute = CrmEmailsComposeRouteImport.update({
@@ -153,11 +165,13 @@ export interface FileRoutesByFullPath {
   '/products/': typeof ProductsIndexRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
+  '/crm/gap/$id': typeof CrmGapIdRoute
   '/crm/icsr/$id': typeof CrmIcsrIdRoute
   '/crm/icsr/new': typeof CrmIcsrNewRoute
   '/crm/icsr/performance': typeof CrmIcsrPerformanceRoute
   '/crm/companies/': typeof CrmCompaniesIndexRoute
   '/crm/emails/': typeof CrmEmailsIndexRoute
+  '/crm/gap/': typeof CrmGapIndexRoute
   '/crm/icsr/': typeof CrmIcsrIndexRoute
 }
 export interface FileRoutesByTo {
@@ -176,11 +190,13 @@ export interface FileRoutesByTo {
   '/products': typeof ProductsIndexRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
+  '/crm/gap/$id': typeof CrmGapIdRoute
   '/crm/icsr/$id': typeof CrmIcsrIdRoute
   '/crm/icsr/new': typeof CrmIcsrNewRoute
   '/crm/icsr/performance': typeof CrmIcsrPerformanceRoute
   '/crm/companies': typeof CrmCompaniesIndexRoute
   '/crm/emails': typeof CrmEmailsIndexRoute
+  '/crm/gap': typeof CrmGapIndexRoute
   '/crm/icsr': typeof CrmIcsrIndexRoute
 }
 export interface FileRoutesById {
@@ -200,11 +216,13 @@ export interface FileRoutesById {
   '/products/': typeof ProductsIndexRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
+  '/crm/gap/$id': typeof CrmGapIdRoute
   '/crm/icsr/$id': typeof CrmIcsrIdRoute
   '/crm/icsr/new': typeof CrmIcsrNewRoute
   '/crm/icsr/performance': typeof CrmIcsrPerformanceRoute
   '/crm/companies/': typeof CrmCompaniesIndexRoute
   '/crm/emails/': typeof CrmEmailsIndexRoute
+  '/crm/gap/': typeof CrmGapIndexRoute
   '/crm/icsr/': typeof CrmIcsrIndexRoute
 }
 export interface FileRouteTypes {
@@ -225,11 +243,13 @@ export interface FileRouteTypes {
     | '/products/'
     | '/crm/companies/$id'
     | '/crm/emails/compose'
+    | '/crm/gap/$id'
     | '/crm/icsr/$id'
     | '/crm/icsr/new'
     | '/crm/icsr/performance'
     | '/crm/companies/'
     | '/crm/emails/'
+    | '/crm/gap/'
     | '/crm/icsr/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -248,11 +268,13 @@ export interface FileRouteTypes {
     | '/products'
     | '/crm/companies/$id'
     | '/crm/emails/compose'
+    | '/crm/gap/$id'
     | '/crm/icsr/$id'
     | '/crm/icsr/new'
     | '/crm/icsr/performance'
     | '/crm/companies'
     | '/crm/emails'
+    | '/crm/gap'
     | '/crm/icsr'
   id:
     | '__root__'
@@ -271,11 +293,13 @@ export interface FileRouteTypes {
     | '/products/'
     | '/crm/companies/$id'
     | '/crm/emails/compose'
+    | '/crm/gap/$id'
     | '/crm/icsr/$id'
     | '/crm/icsr/new'
     | '/crm/icsr/performance'
     | '/crm/companies/'
     | '/crm/emails/'
+    | '/crm/gap/'
     | '/crm/icsr/'
   fileRoutesById: FileRoutesById
 }
@@ -295,11 +319,13 @@ export interface RootRouteChildren {
   ProductsIndexRoute: typeof ProductsIndexRoute
   CrmCompaniesIdRoute: typeof CrmCompaniesIdRoute
   CrmEmailsComposeRoute: typeof CrmEmailsComposeRoute
+  CrmGapIdRoute: typeof CrmGapIdRoute
   CrmIcsrIdRoute: typeof CrmIcsrIdRoute
   CrmIcsrNewRoute: typeof CrmIcsrNewRoute
   CrmIcsrPerformanceRoute: typeof CrmIcsrPerformanceRoute
   CrmCompaniesIndexRoute: typeof CrmCompaniesIndexRoute
   CrmEmailsIndexRoute: typeof CrmEmailsIndexRoute
+  CrmGapIndexRoute: typeof CrmGapIndexRoute
   CrmIcsrIndexRoute: typeof CrmIcsrIndexRoute
 }
 
@@ -403,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmIcsrIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/gap/': {
+      id: '/crm/gap/'
+      path: '/crm/gap'
+      fullPath: '/crm/gap/'
+      preLoaderRoute: typeof CrmGapIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crm/emails/': {
       id: '/crm/emails/'
       path: '/crm/emails'
@@ -438,6 +471,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmIcsrIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/gap/$id': {
+      id: '/crm/gap/$id'
+      path: '/crm/gap/$id'
+      fullPath: '/crm/gap/$id'
+      preLoaderRoute: typeof CrmGapIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crm/emails/compose': {
       id: '/crm/emails/compose'
       path: '/crm/emails/compose'
@@ -471,11 +511,13 @@ const rootRouteChildren: RootRouteChildren = {
   ProductsIndexRoute: ProductsIndexRoute,
   CrmCompaniesIdRoute: CrmCompaniesIdRoute,
   CrmEmailsComposeRoute: CrmEmailsComposeRoute,
+  CrmGapIdRoute: CrmGapIdRoute,
   CrmIcsrIdRoute: CrmIcsrIdRoute,
   CrmIcsrNewRoute: CrmIcsrNewRoute,
   CrmIcsrPerformanceRoute: CrmIcsrPerformanceRoute,
   CrmCompaniesIndexRoute: CrmCompaniesIndexRoute,
   CrmEmailsIndexRoute: CrmEmailsIndexRoute,
+  CrmGapIndexRoute: CrmGapIndexRoute,
   CrmIcsrIndexRoute: CrmIcsrIndexRoute,
 }
 export const routeTree = rootRouteImport
