@@ -248,24 +248,70 @@ function CompanyDetail() {
           </CrmCard>
 
           <CrmCard>
-            <h2 className="text-base font-bold text-foreground">Opportunity history</h2>
-            <div className="mt-3 divide-y divide-border text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-base font-bold text-foreground">Opportunity history</h2>
+              <span className="text-xs text-muted-foreground">
+                {(opportunities ?? []).length} opportunit{(opportunities ?? []).length === 1 ? "y" : "ies"} · grouped by
+                service type
+              </span>
+            </div>
+            <div className="mt-3 space-y-4 text-sm">
               {(opportunities ?? []).length === 0 && (
                 <p className="py-4 text-muted-foreground">No opportunities found.</p>
               )}
-              {(opportunities ?? []).map((o) => {
-                const row = o as { id: string; service_type: string | null; estimated_value: number; priority: string };
+              {Object.entries(
+                ((opportunities ?? []) as {
+                  id: string;
+                  service_type: string | null;
+                  product: string | null;
+                  estimated_value: number;
+                  priority: string;
+                }[]).reduce<
+                  Record<
+                    string,
+                    { id: string; product: string | null; estimated_value: number; priority: string }[]
+                  >
+                >((acc, o) => {
+                  const key = o.service_type ?? "Opportunity";
+                  (acc[key] ??= []).push(o);
+                  return acc;
+                }, {}),
+              ).map(([type, rows]) => {
+                const total = rows.reduce((s, r) => s + Number(r.estimated_value || 0), 0);
+                const expanded = showAllOpps[type];
+                const visible = expanded ? rows : rows.slice(0, 5);
                 return (
-                  <div key={row.id} className="flex items-center justify-between py-2">
-                    <span>{row.service_type ?? "Opportunity"}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {ngn(row.estimated_value)} · {row.priority}
-                    </span>
+                  <div key={type} className="rounded-lg border border-border bg-background p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-foreground">
+                        {type} <span className="text-muted-foreground">({rows.length})</span>
+                      </span>
+                      <span className="text-xs text-muted-foreground">{ngn(total)} total</span>
+                    </div>
+                    <div className="mt-2 divide-y divide-border">
+                      {visible.map((r) => (
+                        <div key={r.id} className="flex items-center justify-between gap-3 py-1.5">
+                          <span className="truncate">{r.product ?? "—"}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            {ngn(r.estimated_value)} · {r.priority}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    {rows.length > 5 && (
+                      <button
+                        className="mt-2 text-xs font-semibold text-brand"
+                        onClick={() => setShowAllOpps((s) => ({ ...s, [type]: !expanded }))}
+                      >
+                        {expanded ? "Show less" : `Show all ${rows.length}`}
+                      </button>
+                    )}
                   </div>
                 );
               })}
             </div>
           </CrmCard>
+
         </div>
 
         <CrmCard>
