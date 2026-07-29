@@ -468,6 +468,7 @@ function CompanyDetail() {
               </button>
             </div>
           </CrmCard>
+          </div>
         )}
 
         <CrmCard>
