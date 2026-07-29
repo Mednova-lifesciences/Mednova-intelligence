@@ -8,6 +8,7 @@ import {
   fetchOpportunities,
 } from "@/lib/mednova-queries";
 import { syncGreenBook } from "@/lib/sync.functions";
+import { backfillCompanyManufacturers } from "@/lib/maintenance.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,8 +47,15 @@ function Dashboard() {
     queryFn: () => fetchOpportunities(8),
   });
   const runSync = useServerFn(syncGreenBook);
+  const runBackfill = useServerFn(backfillCompanyManufacturers);
   const sync = useMutation({
     mutationFn: () => runSync(),
+    onSuccess: () => {
+      qc.invalidateQueries();
+    },
+  });
+  const backfill = useMutation({
+    mutationFn: () => runBackfill(),
     onSuccess: () => {
       qc.invalidateQueries();
     },
@@ -73,13 +81,22 @@ function Dashboard() {
       <Card className="mt-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <h2 className="text-2xl font-bold text-foreground">Green Book refresh</h2>
-          <button
-            onClick={() => sync.mutate()}
-            disabled={sync.isPending}
-            className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-navy-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-          >
-            {sync.isPending ? "Syncing…" : "Sync Green Book"}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => sync.mutate()}
+              disabled={sync.isPending}
+              className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-navy-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+            >
+              {sync.isPending ? "Syncing…" : "Sync Green Book"}
+            </button>
+            <button
+              onClick={() => backfill.mutate()}
+              disabled={backfill.isPending}
+              className="rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-opacity hover:bg-muted/80 disabled:opacity-60"
+            >
+              {backfill.isPending ? "Backfilling…" : "Backfill CRM companies"}
+            </button>
+          </div>
         </div>
         <p className="mt-4 text-muted-foreground">
           Run the existing sync pipeline manually and review the latest status.

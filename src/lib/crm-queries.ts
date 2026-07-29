@@ -192,11 +192,14 @@ export async function addCompanyFromOpportunity(o: {
     .maybeSingle();
   if (existing) return { ok: false, reason: "duplicate", company: existing as Company };
 
+  const manufacturer = o.manufacturer ?? o.company;
+  const product = o.product ?? (o.service_type ? `${o.service_type}` : null);
+
   const { data, error } = await supabase
     .from("companies")
     .insert({
       name: o.company,
-      manufacturer: o.manufacturer,
+      manufacturer,
       category: o.category,
       country: null,
       portfolio: o.service_type,
@@ -204,7 +207,7 @@ export async function addCompanyFromOpportunity(o: {
       priority: o.priority,
       probability: o.probability,
       source_opportunity_id: o.id,
-      product: o.product,
+      product,
       status: "Prospect",
       stage: "Lead",
       score: o.probability,
@@ -255,6 +258,37 @@ export async function fetchStageHistory(companyId: string) {
   return data ?? [];
 }
 
+function normalizeOpportunityRow(o: {
+  id: string;
+  opportunity_id: number | null;
+  company: string;
+  manufacturer: string | null;
+  product: string | null;
+  product_count?: number;
+  category: string | null;
+  service_type: string | null;
+  opportunity_type: string | null;
+  estimated_value: number;
+  probability: number;
+  priority: string;
+  expiry_date: string | null;
+  close_date?: string | null;
+  status: string;
+  recommendation: string | null;
+  created_at: string;
+}) {
+  return {
+    ...o,
+    manufacturer: o.manufacturer ?? o.company ?? null,
+    product: o.product ?? (o.product_count ? `${o.product_count} products` : null),
+    service_type: o.service_type ?? o.opportunity_type ?? null,
+    expiry_date: o.expiry_date ?? o.close_date ?? null,
+    recommendation:
+      o.recommendation ??
+      (o.opportunity_type ? `This is a ${o.opportunity_type} opportunity for ${o.company}.` : null),
+  };
+}
+
 export async function fetchCompanyOpportunities(company: Company) {
   const { data, error } = await supabase
     .from("opportunities")
@@ -263,15 +297,21 @@ export async function fetchCompanyOpportunities(company: Company) {
     .order("estimated_value", { ascending: false })
     .limit(50);
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(normalizeOpportunityRow);
 }
 
 export async function fetchCompanyProducts(company: Company) {
-  if (!company.manufacturer) return [];
+  const lookups = [company.manufacturer, company.name].filter(Boolean) as string[];
+  if (lookups.length === 0) return [];
+
+  const conditions = lookups
+    .map((value) => `manufacturer.eq.${value},applicant.eq.${value}`)
+    .join(',');
+
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .eq("manufacturer", company.manufacturer)
+    .or(conditions)
     .limit(25);
   if (error) throw error;
   return data ?? [];
