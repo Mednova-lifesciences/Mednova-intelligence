@@ -63,6 +63,9 @@
   --color-navy-foreground: var(--navy-foreground);
   --color-navy-muted: var(--navy-muted);
   --color-canvas: var(--canvas);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
 }
 
 
