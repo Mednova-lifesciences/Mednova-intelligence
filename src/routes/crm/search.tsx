@@ -97,9 +97,17 @@ function SearchPage() {
             </div>
           ))}
         </Section>
+        <Section title={`ICSR cases (${data?.cases.length ?? 0})`}>
+          {(data?.cases ?? []).map((c) => (
+            <Link key={c.id} to="/crm/icsr/$id" params={{ id: c.id }} className="block py-2 hover:text-brand">
+              {c.case_ref} · {c.product ?? "—"} · {c.patient_initials ?? "—"} · {c.seriousness ?? "—"} · {c.status}
+            </Link>
+          ))}
+        </Section>
         <Section title="Reports">
           <p className="py-2 text-muted-foreground">Report search will be available with AI reports.</p>
         </Section>
+
       </div>
     </CrmShell>
   );
