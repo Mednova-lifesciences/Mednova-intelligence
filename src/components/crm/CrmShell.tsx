@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-const logo = new URL("../../../image.png", import.meta.url).href;
+const logo = "/image.png";
 import {
   LayoutGrid,
   Building2,

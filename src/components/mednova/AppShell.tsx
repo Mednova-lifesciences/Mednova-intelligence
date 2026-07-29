@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-const logo = new URL("../../../image.png", import.meta.url).href;
+const logo = "/image.png";
 
 const NAV = [
   { to: "/", label: "Dashboard" },

@@ -26,11 +26,11 @@ export const backfillCompanyManufacturers = createServerFn({ method: "POST" }).h
 
     const manufacturer =
       opportunities?.find((o) => o.manufacturer && o.manufacturer.trim())?.manufacturer ?? company.name;
-    const product =
-      company.product ||
+    const fallbackProduct =
       opportunities?.find((o) => o.product && o.product.trim())?.product ??
       opportunities?.find((o) => o.service_type && o.service_type.trim())?.service_type ??
       null;
+    const product = company.product || fallbackProduct;
 
     const patch: Record<string, string | null> = { manufacturer };
     if (product) patch.product = product;

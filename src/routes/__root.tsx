@@ -12,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
-const faviconUrl = new URL("../../image.png", import.meta.url).href;
+const faviconUrl = "/image.png";
 
 function NotFoundComponent() {
   return (
