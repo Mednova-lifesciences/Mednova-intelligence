@@ -74,6 +74,8 @@ export type Activity = {
   company_id: string | null;
   activity_type: string;
   message: string;
+  description: string | null;
+  actor: string;
   created_at: string;
 };
 
@@ -101,11 +103,13 @@ export async function logActivity(
   companyId: string | null,
   activityType: string,
   message: string,
+  description?: string | null,
 ) {
   await supabase.from("activities").insert({
     company_id: companyId,
     activity_type: activityType,
     message,
+    description: description ?? null,
   });
   if (companyId) {
     await supabase
@@ -115,16 +119,27 @@ export async function logActivity(
   }
 }
 
-export async function fetchActivities(limit = 25, companyId?: string) {
+export type ActivityRow = Activity & { companies: { name: string } | null };
+
+export async function fetchActivities(
+  limit = 25,
+  companyId?: string,
+  opts?: { search?: string; type?: string; sort?: "newest" | "oldest" },
+) {
   let q = supabase
     .from("activities")
-    .select("*")
-    .order("created_at", { ascending: false })
+    .select("*, companies(name)")
+    .order("created_at", { ascending: opts?.sort === "oldest" })
     .limit(limit);
   if (companyId) q = q.eq("company_id", companyId);
+  if (opts?.type) q = q.eq("activity_type", opts.type);
+  if (opts?.search) {
+    const s = `%${opts.search}%`;
+    q = q.or(`message.ilike.${s},activity_type.ilike.${s},description.ilike.${s}`);
+  }
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []) as Activity[];
+  return (data ?? []) as ActivityRow[];
 }
 
 /* ------------------------------- Companies ------------------------------- */
@@ -348,10 +363,102 @@ export async function saveEmail(draft: EmailDraft, status: "draft" | "sent") {
   return data;
 }
 
-export async function fetchEmails(companyId?: string) {
+export type EmailRow = {
+  id: string;
+  company_id: string | null;
+  to_address: string | null;
+  cc_address: string | null;
+  bcc_address: string | null;
+  subject: string | null;
+  body: string | null;
+  signature: string | null;
+  status: string;
+  sent_by: string;
+  sent_at: string | null;
+  opened_at: string | null;
+  replied_at: string | null;
+  created_at: string;
+  companies: { name: string } | null;
+};
+
+export async function fetchEmails(companyId?: string, opts?: { search?: string; status?: string }) {
   let q = supabase.from("emails").select("*, companies(name)").order("created_at", { ascending: false });
   if (companyId) q = q.eq("company_id", companyId);
+  if (opts?.status) q = q.eq("status", opts.status);
+  if (opts?.search) {
+    const s = `%${opts.search}%`;
+    q = q.or(`subject.ilike.${s},to_address.ilike.${s}`);
+  }
   const { data, error } = await q;
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as unknown as EmailRow[];
+}
+
+export async function fetchEmail(id: string) {
+  const { data, error } = await supabase
+    .from("emails")
+    .select("*, companies(name)")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data ?? null) as unknown as EmailRow | null;
+}
+
+/* --------------------------------- Notes --------------------------------- */
+
+export type Note = {
+  id: string;
+  company_id: string | null;
+  title: string;
+  body: string;
+  author: string;
+  pinned: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type NoteRow = Note & { companies: { name: string } | null };
+
+export async function fetchNotes(opts?: {
+  companyId?: string | null;
+  standaloneOnly?: boolean;
+  search?: string;
+  sort?: "newest" | "oldest";
+}) {
+  let q = supabase.from("notes").select("*, companies(name)");
+  if (opts?.companyId) q = q.eq("company_id", opts.companyId);
+  if (opts?.standaloneOnly) q = q.is("company_id", null);
+  if (opts?.search) {
+    const s = `%${opts.search}%`;
+    q = q.or(`title.ilike.${s},body.ilike.${s}`);
+  }
+  q = q.order("pinned", { ascending: false }).order("created_at", { ascending: opts?.sort === "oldest" });
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as unknown as NoteRow[];
+}
+
+export async function createNote(n: { company_id: string | null; title: string; body: string }) {
+  const { data, error } = await supabase
+    .from("notes")
+    .insert({ company_id: n.company_id, title: n.title || "Untitled note", body: n.body })
+    .select("*")
+    .single();
+  if (error) throw error;
+  await logActivity(n.company_id, "Note Created", `Note created: ${n.title || "Untitled note"}`);
+  return data as unknown as Note;
+}
+
+export async function updateNote(note: Note, patch: Partial<Pick<Note, "title" | "body" | "pinned">>) {
+  const { error } = await supabase.from("notes").update(patch).eq("id", note.id);
+  if (error) throw error;
+  if (patch.pinned === undefined) {
+    await logActivity(note.company_id, "Note Updated", `Note updated: ${patch.title ?? note.title}`);
+  }
+}
+
+export async function deleteNote(note: Note) {
+  const { error } = await supabase.from("notes").delete().eq("id", note.id);
+  if (error) throw error;
+  await logActivity(note.company_id, "Note Deleted", `Note deleted: ${note.title}`);
 }
