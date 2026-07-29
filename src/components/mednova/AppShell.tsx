@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import logo from "@/assets/mednova-logo.png.asset.json";
 import type { ReactNode } from "react";
 
 const NAV = [
@@ -15,7 +16,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="bg-navy text-navy-foreground">
         <div className="flex flex-wrap items-center justify-between gap-3 px-8 py-4">
           <div>
-            <div className="text-2xl font-bold leading-tight">MedNova OS</div>
+            <img
+              src={logo.url}
+              alt="MedNova Lifesciences logo"
+              className="h-8 w-auto brightness-0 invert"
+            />
             <div className="text-xs font-semibold text-navy-muted">
               NAFDAC Intelligence &amp; Revenue Engine
             </div>
