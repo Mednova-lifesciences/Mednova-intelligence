@@ -292,6 +292,359 @@ export type Database = {
           },
         ]
       }
+      icsr_attachments: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          storage_path: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          storage_path?: string | null
+          uploaded_by?: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          storage_path?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "icsr_attachments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "icsr_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      icsr_case_events: {
+        Row: {
+          actor: string
+          case_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          message: string
+        }
+        Insert: {
+          actor?: string
+          case_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          message: string
+        }
+        Update: {
+          actor?: string
+          case_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "icsr_case_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "icsr_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      icsr_cases: {
+        Row: {
+          action_taken: string | null
+          ai_medical_summary: string | null
+          ai_narrative: string | null
+          assignee: string | null
+          batch: string | null
+          case_ref: string
+          causality: string | null
+          channel: string | null
+          cioms_generated: boolean
+          concomitant_medication: string | null
+          country: string | null
+          created_at: string
+          dechallenge: string | null
+          dosage_form: string | null
+          dose: string | null
+          due_date: string | null
+          duplicate_of: string | null
+          duplicate_outcome: string | null
+          e2b_generated: boolean
+          event_description: string | null
+          fingerprint: string | null
+          id: string
+          indication: string | null
+          is_draft: boolean
+          lab_results: string | null
+          manufacturer: string | null
+          meddra_term: string | null
+          medical_history: string | null
+          medwatch_generated: boolean
+          notes: string | null
+          onset_date: string | null
+          outcome: string | null
+          patient_age: string | null
+          patient_ethnicity: string | null
+          patient_initials: string | null
+          patient_pregnancy: string | null
+          patient_sex: string | null
+          patient_weight: string | null
+          product: string | null
+          product_id: string | null
+          received_date: string | null
+          rechallenge: string | null
+          regulator: string | null
+          report_type: string | null
+          reporter_contact: string | null
+          reporter_email: string | null
+          reporter_name: string | null
+          route: string | null
+          seriousness: string | null
+          seriousness_criterion: string | null
+          source_type: string | null
+          state: string | null
+          status: string
+          stop_date: string | null
+          submission_reference: string | null
+          submitted_date: string | null
+          therapy_start: string | null
+          therapy_stop: string | null
+          updated_at: string
+        }
+        Insert: {
+          action_taken?: string | null
+          ai_medical_summary?: string | null
+          ai_narrative?: string | null
+          assignee?: string | null
+          batch?: string | null
+          case_ref: string
+          causality?: string | null
+          channel?: string | null
+          cioms_generated?: boolean
+          concomitant_medication?: string | null
+          country?: string | null
+          created_at?: string
+          dechallenge?: string | null
+          dosage_form?: string | null
+          dose?: string | null
+          due_date?: string | null
+          duplicate_of?: string | null
+          duplicate_outcome?: string | null
+          e2b_generated?: boolean
+          event_description?: string | null
+          fingerprint?: string | null
+          id?: string
+          indication?: string | null
+          is_draft?: boolean
+          lab_results?: string | null
+          manufacturer?: string | null
+          meddra_term?: string | null
+          medical_history?: string | null
+          medwatch_generated?: boolean
+          notes?: string | null
+          onset_date?: string | null
+          outcome?: string | null
+          patient_age?: string | null
+          patient_ethnicity?: string | null
+          patient_initials?: string | null
+          patient_pregnancy?: string | null
+          patient_sex?: string | null
+          patient_weight?: string | null
+          product?: string | null
+          product_id?: string | null
+          received_date?: string | null
+          rechallenge?: string | null
+          regulator?: string | null
+          report_type?: string | null
+          reporter_contact?: string | null
+          reporter_email?: string | null
+          reporter_name?: string | null
+          route?: string | null
+          seriousness?: string | null
+          seriousness_criterion?: string | null
+          source_type?: string | null
+          state?: string | null
+          status?: string
+          stop_date?: string | null
+          submission_reference?: string | null
+          submitted_date?: string | null
+          therapy_start?: string | null
+          therapy_stop?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action_taken?: string | null
+          ai_medical_summary?: string | null
+          ai_narrative?: string | null
+          assignee?: string | null
+          batch?: string | null
+          case_ref?: string
+          causality?: string | null
+          channel?: string | null
+          cioms_generated?: boolean
+          concomitant_medication?: string | null
+          country?: string | null
+          created_at?: string
+          dechallenge?: string | null
+          dosage_form?: string | null
+          dose?: string | null
+          due_date?: string | null
+          duplicate_of?: string | null
+          duplicate_outcome?: string | null
+          e2b_generated?: boolean
+          event_description?: string | null
+          fingerprint?: string | null
+          id?: string
+          indication?: string | null
+          is_draft?: boolean
+          lab_results?: string | null
+          manufacturer?: string | null
+          meddra_term?: string | null
+          medical_history?: string | null
+          medwatch_generated?: boolean
+          notes?: string | null
+          onset_date?: string | null
+          outcome?: string | null
+          patient_age?: string | null
+          patient_ethnicity?: string | null
+          patient_initials?: string | null
+          patient_pregnancy?: string | null
+          patient_sex?: string | null
+          patient_weight?: string | null
+          product?: string | null
+          product_id?: string | null
+          received_date?: string | null
+          rechallenge?: string | null
+          regulator?: string | null
+          report_type?: string | null
+          reporter_contact?: string | null
+          reporter_email?: string | null
+          reporter_name?: string | null
+          route?: string | null
+          seriousness?: string | null
+          seriousness_criterion?: string | null
+          source_type?: string | null
+          state?: string | null
+          status?: string
+          stop_date?: string | null
+          submission_reference?: string | null
+          submitted_date?: string | null
+          therapy_start?: string | null
+          therapy_stop?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      icsr_followups: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          due_date: string | null
+          email_id: string | null
+          id: string
+          question: string | null
+          received_at: string | null
+          requested_at: string
+          requested_by: string
+          response: string | null
+          status: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          due_date?: string | null
+          email_id?: string | null
+          id?: string
+          question?: string | null
+          received_at?: string | null
+          requested_at?: string
+          requested_by?: string
+          response?: string | null
+          status?: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          due_date?: string | null
+          email_id?: string | null
+          id?: string
+          question?: string | null
+          received_at?: string | null
+          requested_at?: string
+          requested_by?: string
+          response?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "icsr_followups_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "icsr_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      icsr_notes: {
+        Row: {
+          author: string
+          body: string
+          case_id: string | null
+          created_at: string
+          id: string
+          pinned: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string
+          body: string
+          case_id?: string | null
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          body?: string
+          case_id?: string | null
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "icsr_notes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "icsr_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notes: {
         Row: {
           author: string
@@ -660,6 +1013,7 @@ export type Database = {
     Functions: {
       crm_dashboard_stats: { Args: never; Returns: Json }
       dashboard_stats: { Args: never; Returns: Json }
+      icsr_stats: { Args: never; Returns: Json }
       opportunity_stats: { Args: never; Returns: Json }
       purge_deleted_tasks: { Args: never; Returns: undefined }
     }
