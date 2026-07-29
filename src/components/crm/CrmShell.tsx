@@ -29,7 +29,7 @@ const NAV = [
   { to: "/crm/emails", label: "Emails", icon: Mail },
   { to: "/crm/reports", label: "Reports", icon: BarChart3 },
   { to: "/crm/notes", label: "Notes", icon: StickyNote },
-  { to: "/crm/icsr", label: "Pharmacovigilance", icon: ShieldAlert },
+  { to: "/crm/icsr", label: "ICSR Intake", icon: ShieldAlert },
   { to: "/crm/gap", label: "Gap Assessment", icon: ClipboardCheck },
 ] as const;
 
