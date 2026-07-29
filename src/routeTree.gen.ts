@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as CrmIndexRouteImport } from './routes/crm/index'
 import { Route as ProductsIdRouteImport } from './routes/products/$id'
+import { Route as CrmCompaniesIndexRouteImport } from './routes/crm/companies/index'
 
 const RenewalsRoute = RenewalsRouteImport.update({
   id: '/renewals',
@@ -46,6 +47,11 @@ const ProductsIdRoute = ProductsIdRouteImport.update({
   path: '/products/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrmCompaniesIndexRoute = CrmCompaniesIndexRouteImport.update({
+  id: '/crm/companies/',
+  path: '/crm/companies/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/products/$id': typeof ProductsIdRoute
   '/crm/': typeof CrmIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/crm/companies/': typeof CrmCompaniesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/products/$id': typeof ProductsIdRoute
   '/crm': typeof CrmIndexRoute
   '/products': typeof ProductsIndexRoute
+  '/crm/companies': typeof CrmCompaniesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +79,7 @@ export interface FileRoutesById {
   '/products/$id': typeof ProductsIdRoute
   '/crm/': typeof CrmIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/crm/companies/': typeof CrmCompaniesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +90,7 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/crm/'
     | '/products/'
+    | '/crm/companies/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/crm'
     | '/products'
+    | '/crm/companies'
   id:
     | '__root__'
     | '/'
@@ -97,6 +108,7 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/crm/'
     | '/products/'
+    | '/crm/companies/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,6 +118,7 @@ export interface RootRouteChildren {
   ProductsIdRoute: typeof ProductsIdRoute
   CrmIndexRoute: typeof CrmIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
+  CrmCompaniesIndexRoute: typeof CrmCompaniesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -152,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/companies/': {
+      id: '/crm/companies/'
+      path: '/crm/companies'
+      fullPath: '/crm/companies/'
+      preLoaderRoute: typeof CrmCompaniesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -162,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProductsIdRoute: ProductsIdRoute,
   CrmIndexRoute: CrmIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
+  CrmCompaniesIndexRoute: CrmCompaniesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
