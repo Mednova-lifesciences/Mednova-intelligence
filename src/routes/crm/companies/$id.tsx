@@ -109,19 +109,71 @@ function CompanyDetail() {
   };
 
   const onGenerateEmail = async () => {
-    const primary = (contacts ?? [])[0];
-    const result = await makeEmail({
-      data: {
-        company: company.name,
-        contactName: primary?.name ?? null,
-        contactEmail: primary?.email ?? intel?.email ?? null,
-        category: company.category,
-        product: company.product,
-        recommendation: (opportunities?.[0] as { recommendation?: string } | undefined)?.recommendation ?? null,
-      },
-    });
-    setDraftEmail(result);
+    setGeneratingEmail(true);
+    try {
+      const primary = (contacts ?? [])[0];
+      const result = await makeEmail({
+        data: {
+          company: company.name,
+          contactName: primary?.name ?? null,
+          contactEmail: primary?.email ?? intel?.email ?? null,
+          category: company.category,
+          product: company.product,
+          recommendation: (opportunities?.[0] as { recommendation?: string } | undefined)?.recommendation ?? null,
+        },
+      });
+      setDraftEmail(result);
+      requestAnimationFrame(() => emailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    } finally {
+      setGeneratingEmail(false);
+    }
   };
+
+  const onGenerateReport = () => {
+    const opps = (opportunities ?? []) as {
+      service_type: string | null;
+      product: string | null;
+      estimated_value: number;
+      priority: string;
+    }[];
+    const totalValue = opps.reduce((s, o) => s + Number(o.estimated_value || 0), 0);
+    const rows = opps
+      .map(
+        (o) =>
+          `<tr><td>${o.service_type ?? "Opportunity"}</td><td>${o.product ?? "—"}</td><td>${ngn(
+            o.estimated_value,
+          )}</td><td>${o.priority}</td></tr>`,
+      )
+      .join("");
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${company.name} — Company report</title>
+      <style>body{font-family:system-ui,sans-serif;color:#0f172a;padding:32px}h1{color:#071a2f}
+      table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+      th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:left}th{background:#f1f5f9}
+      .kpi{display:flex;gap:16px;margin:16px 0}.kpi div{border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px}</style>
+      </head><body>
+      <h1>${company.name}</h1>
+      <p>${company.category ?? "Biopharma"} · ${company.country ?? "Unknown"} · Stage: ${company.stage}</p>
+      <div class="kpi">
+        <div><strong>${opps.length}</strong><br/>Opportunities</div>
+        <div><strong>${ngn(totalValue)}</strong><br/>Pipeline value</div>
+        <div><strong>${company.probability}%</strong><br/>Probability</div>
+        <div><strong>${(products ?? []).length}</strong><br/>Products</div>
+        <div><strong>${(contacts ?? []).length}</strong><br/>Contacts</div>
+      </div>
+      <h2>Opportunities</h2>
+      <table><thead><tr><th>Service type</th><th>Product</th><th>Estimated value</th><th>Priority</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="4">No opportunities</td></tr>'}</tbody></table>
+      <p style="margin-top:24px;font-size:12px;color:#64748b">Generated ${new Date().toLocaleString()} · MedNovaOS</p>
+      </body></html>`;
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+      w.print();
+    }
+  };
+
 
   const onStageChange = async (stage: PipelineStage) => {
     await moveCompanyStage(company, stage);
