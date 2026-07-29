@@ -1,0 +1,189 @@
+import crypto from "crypto";
+
+const GREENBOOK_URL = "https://greenbook.nafdac.gov.ng/";
+
+function sha256(input: string) {
+  return crypto.createHash("sha256").update(input).digest("hex");
+}
+
+export async function runGreenBookSync(supabaseAdmin: any) {
+  const batchId = crypto.randomUUID();
+  const startedAt = new Date().toISOString();
+
+  let start = 0;
+  const length = 200;
+  let recordsTotal = Infinity;
+
+  let added = 0;
+  let updated = 0;
+  let unchanged = 0;
+
+  try {
+    while (start < recordsTotal) {
+      const draw = Math.floor(start / length) + 1;
+      const params = new URLSearchParams({
+        draw: String(draw),
+        start: String(start),
+        length: String(length),
+      });
+
+      const url = `${GREENBOOK_URL}?${params.toString()}`;
+      const res = await fetch(url, {
+        headers: {
+          Accept: "application/json, text/javascript, */*; q=0.01",
+          "X-Requested-With": "XMLHttpRequest",
+          Referer: GREENBOOK_URL,
+        },
+      });
+
+      if (!res.ok) throw new Error(`Green Book request failed ${res.status}`);
+      const json = await res.json();
+
+      recordsTotal = Number(json.recordsTotal ?? json.recordsFiltered ?? 0) || 0;
+      const rows = Array.isArray(json.data) ? json.data : [];
+
+      for (const r of rows) {
+        const rawText = JSON.stringify(r);
+        const checksum = sha256(rawText);
+
+        const { error: rawErr } = await supabaseAdmin.from("greenbook_raw").insert({
+          nafdac_product_id: r.product_id ?? null,
+          nafdac_number: r.NAFDAC ?? null,
+          raw_json: r,
+          checksum,
+          sync_batch_id: batchId,
+          first_seen_at: startedAt,
+          last_seen_at: startedAt,
+        });
+        if (rawErr) throw rawErr;
+
+        const { data: prev } = await supabaseAdmin
+          .from("greenbook_raw")
+          .select("checksum")
+          .eq("nafdac_product_id", r.product_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const prevChecksum = prev?.checksum;
+        const isChanged = prevChecksum !== checksum;
+
+        const normalized: any = {
+          product_name: (r.product_name ?? "").toString().replaceAll("#", "").replaceAll("*", ""),
+          manufacturer: r.manufacturer ?? null,
+          applicant: r.applicant?.name ?? null,
+          category: r.product_category?.name ?? r.category_name ?? null,
+          dosage_form: r.form?.name ?? null,
+          route: r.route?.name ?? null,
+          nafdac_number: r.NAFDAC ?? null,
+          registration_date: null,
+          approval_date: r.approval_date ?? null,
+          expiry_date: r.expiry_date ?? null,
+          status: r.status ?? "Active",
+          strength: r.strength ?? null,
+          pack_size: r.pack_size ?? null,
+          composition: r.composition ?? null,
+          last_synced: new Date().toISOString(),
+        };
+
+        const { data: existing } = await supabaseAdmin
+          .from("products")
+          .select("*")
+          .eq("nafdac_number", normalized.nafdac_number)
+          .maybeSingle();
+
+        if (!existing) {
+          const { error: insErr } = await supabaseAdmin.from("products").insert(normalized);
+          if (insErr) throw insErr;
+          added += 1;
+        } else if (isChanged) {
+          const { error: updErr } = await supabaseAdmin
+            .from("products")
+            .update(normalized)
+            .eq("id", existing.id);
+          if (updErr) throw updErr;
+          updated += 1;
+        } else {
+          unchanged += 1;
+        }
+      }
+
+      start += length;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+
+    const { data: allProducts } = await supabaseAdmin.from("products").select("id,product_name,manufacturer,category,expiry_date,applicant,nafdac_number,status");
+
+    await supabaseAdmin.from("opportunities").delete();
+    const byManufacturer: Record<string, any[]> = {};
+    for (const p of allProducts ?? []) {
+      if (p.manufacturer) {
+        byManufacturer[p.manufacturer] = byManufacturer[p.manufacturer] || [];
+        byManufacturer[p.manufacturer].push(p);
+      }
+    }
+    const oppInserts: any[] = [];
+    for (const [m, ps] of Object.entries(byManufacturer)) {
+      oppInserts.push({
+        company: m,
+        category: ps[0].category ?? null,
+        product_count: ps.length,
+        estimated_value: ps.length * 500000,
+        services: "Registration support, renewal monitoring",
+        opportunity_type: "Manufacturer Renewal Watch",
+        status: "active",
+        priority: ps.length * 500000 > 5000000 ? "high" : ps.length * 500000 > 1000000 ? "medium" : "low",
+        probability: ps.length * 500000 > 5000000 ? 80 : ps.length * 500000 > 1000000 ? 60 : 40,
+        close_date: new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString().slice(0, 10),
+      });
+    }
+    if (oppInserts.length) {
+      const { error: oppErr } = await supabaseAdmin.from("opportunities").insert(oppInserts);
+      if (oppErr) throw oppErr;
+    }
+
+    await supabaseAdmin.from("renewals").delete();
+    const renewalsInserts: any[] = [];
+    for (const p of allProducts ?? []) {
+      if (p.expiry_date) {
+        renewalsInserts.push({
+          product_id: p.id,
+          product_name: p.product_name,
+          nafdac_number: p.nafdac_number,
+          category: p.category,
+          applicant: p.applicant,
+          expiry_date: p.expiry_date,
+          status: p.status ?? "Active",
+        });
+      }
+    }
+    if (renewalsInserts.length) {
+      const { error: renErr } = await supabaseAdmin.from("renewals").insert(renewalsInserts);
+      if (renErr) throw renErr;
+    }
+
+    const finishedAt = new Date().toISOString();
+    const { error: histErr } = await supabaseAdmin.from("sync_history").insert({
+      status: "success",
+      records_added: added,
+      records_updated: updated,
+      message: `Sync completed: ${added} added, ${updated} updated, ${unchanged} unchanged`,
+      started_at: startedAt,
+      finished_at: finishedAt,
+    });
+    if (histErr) throw histErr;
+
+    return { status: "success", added, updated, unchanged, finishedAt };
+  } catch (err: any) {
+    const finishedAt = new Date().toISOString();
+    await supabaseAdmin.from("sync_history").insert({
+      status: "error",
+      records_added: added,
+      records_updated: updated,
+      message: `Sync failed: ${err.message}`,
+      started_at: startedAt,
+      finished_at: finishedAt,
+    });
+    throw err;
+  }
+}

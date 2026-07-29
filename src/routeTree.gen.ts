@@ -9,34 +9,34 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RenewalsRouteImport } from './routes/renewals'
-import { Route as OpportunitiesRouteImport } from './routes/opportunities'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProductsIndexRouteImport } from './routes/products/index'
+import { Route as OpportunitiesRouteImport } from './routes/opportunities'
+import { Route as RenewalsRouteImport } from './routes/renewals'
 import { Route as CrmIndexRouteImport } from './routes/crm/index'
-import { Route as ProductsIdRouteImport } from './routes/products/$id'
-import { Route as CrmTasksRouteImport } from './routes/crm/tasks'
-import { Route as CrmSearchRouteImport } from './routes/crm/search'
-import { Route as CrmReportsRouteImport } from './routes/crm/reports'
-import { Route as CrmPipelineRouteImport } from './routes/crm/pipeline'
-import { Route as CrmNotesRouteImport } from './routes/crm/notes'
-import { Route as CrmContactsRouteImport } from './routes/crm/contacts'
 import { Route as CrmActivitiesRouteImport } from './routes/crm/activities'
-import { Route as CrmIcsrIndexRouteImport } from './routes/crm/icsr/index'
-import { Route as CrmGapIndexRouteImport } from './routes/crm/gap/index'
-import { Route as CrmEmailsIndexRouteImport } from './routes/crm/emails/index'
+import { Route as CrmContactsRouteImport } from './routes/crm/contacts'
+import { Route as CrmNotesRouteImport } from './routes/crm/notes'
+import { Route as CrmPipelineRouteImport } from './routes/crm/pipeline'
+import { Route as CrmReportsRouteImport } from './routes/crm/reports'
+import { Route as CrmSearchRouteImport } from './routes/crm/search'
+import { Route as CrmTasksRouteImport } from './routes/crm/tasks'
+import { Route as ProductsIndexRouteImport } from './routes/products/index'
+import { Route as ProductsIdRouteImport } from './routes/products/$id'
 import { Route as CrmCompaniesIndexRouteImport } from './routes/crm/companies/index'
-import { Route as CrmIcsrPerformanceRouteImport } from './routes/crm/icsr/performance'
-import { Route as CrmIcsrNewRouteImport } from './routes/crm/icsr/new'
-import { Route as CrmIcsrActivityRouteImport } from './routes/crm/icsr/activity'
-import { Route as CrmIcsrIdRouteImport } from './routes/crm/icsr/$id'
-import { Route as CrmGapIdRouteImport } from './routes/crm/gap/$id'
-import { Route as CrmEmailsComposeRouteImport } from './routes/crm/emails/compose'
 import { Route as CrmCompaniesIdRouteImport } from './routes/crm/companies/$id'
+import { Route as CrmEmailsIndexRouteImport } from './routes/crm/emails/index'
+import { Route as CrmEmailsComposeRouteImport } from './routes/crm/emails/compose'
+import { Route as CrmGapIndexRouteImport } from './routes/crm/gap/index'
+import { Route as CrmGapIdRouteImport } from './routes/crm/gap/$id'
+import { Route as CrmIcsrIndexRouteImport } from './routes/crm/icsr/index'
+import { Route as CrmIcsrIdRouteImport } from './routes/crm/icsr/$id'
+import { Route as CrmIcsrActivityRouteImport } from './routes/crm/icsr/activity'
+import { Route as CrmIcsrNewRouteImport } from './routes/crm/icsr/new'
+import { Route as CrmIcsrPerformanceRouteImport } from './routes/crm/icsr/performance'
 
-const RenewalsRoute = RenewalsRouteImport.update({
-  id: '/renewals',
-  path: '/renewals',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OpportunitiesRoute = OpportunitiesRouteImport.update({
@@ -44,14 +44,9 @@ const OpportunitiesRoute = OpportunitiesRouteImport.update({
   path: '/opportunities',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProductsIndexRoute = ProductsIndexRouteImport.update({
-  id: '/products/',
-  path: '/products/',
+const RenewalsRoute = RenewalsRouteImport.update({
+  id: '/renewals',
+  path: '/renewals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrmIndexRoute = CrmIndexRouteImport.update({
@@ -59,34 +54,9 @@ const CrmIndexRoute = CrmIndexRouteImport.update({
   path: '/crm/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProductsIdRoute = ProductsIdRouteImport.update({
-  id: '/products/$id',
-  path: '/products/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmTasksRoute = CrmTasksRouteImport.update({
-  id: '/crm/tasks',
-  path: '/crm/tasks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmSearchRoute = CrmSearchRouteImport.update({
-  id: '/crm/search',
-  path: '/crm/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmReportsRoute = CrmReportsRouteImport.update({
-  id: '/crm/reports',
-  path: '/crm/reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmPipelineRoute = CrmPipelineRouteImport.update({
-  id: '/crm/pipeline',
-  path: '/crm/pipeline',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmNotesRoute = CrmNotesRouteImport.update({
-  id: '/crm/notes',
-  path: '/crm/notes',
+const CrmActivitiesRoute = CrmActivitiesRouteImport.update({
+  id: '/crm/activities',
+  path: '/crm/activities',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrmContactsRoute = CrmContactsRouteImport.update({
@@ -94,24 +64,39 @@ const CrmContactsRoute = CrmContactsRouteImport.update({
   path: '/crm/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrmActivitiesRoute = CrmActivitiesRouteImport.update({
-  id: '/crm/activities',
-  path: '/crm/activities',
+const CrmNotesRoute = CrmNotesRouteImport.update({
+  id: '/crm/notes',
+  path: '/crm/notes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrmIcsrIndexRoute = CrmIcsrIndexRouteImport.update({
-  id: '/crm/icsr/',
-  path: '/crm/icsr/',
+const CrmPipelineRoute = CrmPipelineRouteImport.update({
+  id: '/crm/pipeline',
+  path: '/crm/pipeline',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrmGapIndexRoute = CrmGapIndexRouteImport.update({
-  id: '/crm/gap/',
-  path: '/crm/gap/',
+const CrmReportsRoute = CrmReportsRouteImport.update({
+  id: '/crm/reports',
+  path: '/crm/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrmEmailsIndexRoute = CrmEmailsIndexRouteImport.update({
-  id: '/crm/emails/',
-  path: '/crm/emails/',
+const CrmSearchRoute = CrmSearchRouteImport.update({
+  id: '/crm/search',
+  path: '/crm/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmTasksRoute = CrmTasksRouteImport.update({
+  id: '/crm/tasks',
+  path: '/crm/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsIndexRoute = ProductsIndexRouteImport.update({
+  id: '/products/',
+  path: '/products/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsIdRoute = ProductsIdRouteImport.update({
+  id: '/products/$id',
+  path: '/products/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrmCompaniesIndexRoute = CrmCompaniesIndexRouteImport.update({
@@ -119,29 +104,14 @@ const CrmCompaniesIndexRoute = CrmCompaniesIndexRouteImport.update({
   path: '/crm/companies/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrmIcsrPerformanceRoute = CrmIcsrPerformanceRouteImport.update({
-  id: '/crm/icsr/performance',
-  path: '/crm/icsr/performance',
+const CrmCompaniesIdRoute = CrmCompaniesIdRouteImport.update({
+  id: '/crm/companies/$id',
+  path: '/crm/companies/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrmIcsrNewRoute = CrmIcsrNewRouteImport.update({
-  id: '/crm/icsr/new',
-  path: '/crm/icsr/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmIcsrActivityRoute = CrmIcsrActivityRouteImport.update({
-  id: '/crm/icsr/activity',
-  path: '/crm/icsr/activity',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmIcsrIdRoute = CrmIcsrIdRouteImport.update({
-  id: '/crm/icsr/$id',
-  path: '/crm/icsr/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmGapIdRoute = CrmGapIdRouteImport.update({
-  id: '/crm/gap/$id',
-  path: '/crm/gap/$id',
+const CrmEmailsIndexRoute = CrmEmailsIndexRouteImport.update({
+  id: '/crm/emails/',
+  path: '/crm/emails/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrmEmailsComposeRoute = CrmEmailsComposeRouteImport.update({
@@ -149,9 +119,39 @@ const CrmEmailsComposeRoute = CrmEmailsComposeRouteImport.update({
   path: '/crm/emails/compose',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrmCompaniesIdRoute = CrmCompaniesIdRouteImport.update({
-  id: '/crm/companies/$id',
-  path: '/crm/companies/$id',
+const CrmGapIndexRoute = CrmGapIndexRouteImport.update({
+  id: '/crm/gap/',
+  path: '/crm/gap/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmGapIdRoute = CrmGapIdRouteImport.update({
+  id: '/crm/gap/$id',
+  path: '/crm/gap/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmIcsrIndexRoute = CrmIcsrIndexRouteImport.update({
+  id: '/crm/icsr/',
+  path: '/crm/icsr/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmIcsrIdRoute = CrmIcsrIdRouteImport.update({
+  id: '/crm/icsr/$id',
+  path: '/crm/icsr/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmIcsrActivityRoute = CrmIcsrActivityRouteImport.update({
+  id: '/crm/icsr/activity',
+  path: '/crm/icsr/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmIcsrNewRoute = CrmIcsrNewRouteImport.update({
+  id: '/crm/icsr/new',
+  path: '/crm/icsr/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmIcsrPerformanceRoute = CrmIcsrPerformanceRouteImport.update({
+  id: '/crm/icsr/performance',
+  path: '/crm/icsr/performance',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -344,11 +344,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/renewals': {
-      id: '/renewals'
-      path: '/renewals'
-      fullPath: '/renewals'
-      preLoaderRoute: typeof RenewalsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/opportunities': {
@@ -358,18 +358,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OpportunitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/products/': {
-      id: '/products/'
-      path: '/products'
-      fullPath: '/products/'
-      preLoaderRoute: typeof ProductsIndexRouteImport
+    '/renewals': {
+      id: '/renewals'
+      path: '/renewals'
+      fullPath: '/renewals'
+      preLoaderRoute: typeof RenewalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crm/': {
@@ -379,46 +372,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/products/$id': {
-      id: '/products/$id'
-      path: '/products/$id'
-      fullPath: '/products/$id'
-      preLoaderRoute: typeof ProductsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm/tasks': {
-      id: '/crm/tasks'
-      path: '/crm/tasks'
-      fullPath: '/crm/tasks'
-      preLoaderRoute: typeof CrmTasksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm/search': {
-      id: '/crm/search'
-      path: '/crm/search'
-      fullPath: '/crm/search'
-      preLoaderRoute: typeof CrmSearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm/reports': {
-      id: '/crm/reports'
-      path: '/crm/reports'
-      fullPath: '/crm/reports'
-      preLoaderRoute: typeof CrmReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm/pipeline': {
-      id: '/crm/pipeline'
-      path: '/crm/pipeline'
-      fullPath: '/crm/pipeline'
-      preLoaderRoute: typeof CrmPipelineRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm/notes': {
-      id: '/crm/notes'
-      path: '/crm/notes'
-      fullPath: '/crm/notes'
-      preLoaderRoute: typeof CrmNotesRouteImport
+    '/crm/activities': {
+      id: '/crm/activities'
+      path: '/crm/activities'
+      fullPath: '/crm/activities'
+      preLoaderRoute: typeof CrmActivitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crm/contacts': {
@@ -428,32 +386,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crm/activities': {
-      id: '/crm/activities'
-      path: '/crm/activities'
-      fullPath: '/crm/activities'
-      preLoaderRoute: typeof CrmActivitiesRouteImport
+    '/crm/notes': {
+      id: '/crm/notes'
+      path: '/crm/notes'
+      fullPath: '/crm/notes'
+      preLoaderRoute: typeof CrmNotesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crm/icsr/': {
-      id: '/crm/icsr/'
-      path: '/crm/icsr'
-      fullPath: '/crm/icsr/'
-      preLoaderRoute: typeof CrmIcsrIndexRouteImport
+    '/crm/pipeline': {
+      id: '/crm/pipeline'
+      path: '/crm/pipeline'
+      fullPath: '/crm/pipeline'
+      preLoaderRoute: typeof CrmPipelineRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crm/gap/': {
-      id: '/crm/gap/'
-      path: '/crm/gap'
-      fullPath: '/crm/gap/'
-      preLoaderRoute: typeof CrmGapIndexRouteImport
+    '/crm/reports': {
+      id: '/crm/reports'
+      path: '/crm/reports'
+      fullPath: '/crm/reports'
+      preLoaderRoute: typeof CrmReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crm/emails/': {
-      id: '/crm/emails/'
-      path: '/crm/emails'
-      fullPath: '/crm/emails/'
-      preLoaderRoute: typeof CrmEmailsIndexRouteImport
+    '/crm/search': {
+      id: '/crm/search'
+      path: '/crm/search'
+      fullPath: '/crm/search'
+      preLoaderRoute: typeof CrmSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm/tasks': {
+      id: '/crm/tasks'
+      path: '/crm/tasks'
+      fullPath: '/crm/tasks'
+      preLoaderRoute: typeof CrmTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/': {
+      id: '/products/'
+      path: '/products'
+      fullPath: '/products/'
+      preLoaderRoute: typeof ProductsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/$id': {
+      id: '/products/$id'
+      path: '/products/$id'
+      fullPath: '/products/$id'
+      preLoaderRoute: typeof ProductsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crm/companies/': {
@@ -463,39 +442,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmCompaniesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crm/icsr/performance': {
-      id: '/crm/icsr/performance'
-      path: '/crm/icsr/performance'
-      fullPath: '/crm/icsr/performance'
-      preLoaderRoute: typeof CrmIcsrPerformanceRouteImport
+    '/crm/companies/$id': {
+      id: '/crm/companies/$id'
+      path: '/crm/companies/$id'
+      fullPath: '/crm/companies/$id'
+      preLoaderRoute: typeof CrmCompaniesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crm/icsr/new': {
-      id: '/crm/icsr/new'
-      path: '/crm/icsr/new'
-      fullPath: '/crm/icsr/new'
-      preLoaderRoute: typeof CrmIcsrNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm/icsr/activity': {
-      id: '/crm/icsr/activity'
-      path: '/crm/icsr/activity'
-      fullPath: '/crm/icsr/activity'
-      preLoaderRoute: typeof CrmIcsrActivityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm/icsr/$id': {
-      id: '/crm/icsr/$id'
-      path: '/crm/icsr/$id'
-      fullPath: '/crm/icsr/$id'
-      preLoaderRoute: typeof CrmIcsrIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm/gap/$id': {
-      id: '/crm/gap/$id'
-      path: '/crm/gap/$id'
-      fullPath: '/crm/gap/$id'
-      preLoaderRoute: typeof CrmGapIdRouteImport
+    '/crm/emails/': {
+      id: '/crm/emails/'
+      path: '/crm/emails'
+      fullPath: '/crm/emails/'
+      preLoaderRoute: typeof CrmEmailsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crm/emails/compose': {
@@ -505,11 +463,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmEmailsComposeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crm/companies/$id': {
-      id: '/crm/companies/$id'
-      path: '/crm/companies/$id'
-      fullPath: '/crm/companies/$id'
-      preLoaderRoute: typeof CrmCompaniesIdRouteImport
+    '/crm/gap/': {
+      id: '/crm/gap/'
+      path: '/crm/gap'
+      fullPath: '/crm/gap/'
+      preLoaderRoute: typeof CrmGapIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm/gap/$id': {
+      id: '/crm/gap/$id'
+      path: '/crm/gap/$id'
+      fullPath: '/crm/gap/$id'
+      preLoaderRoute: typeof CrmGapIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm/icsr/': {
+      id: '/crm/icsr/'
+      path: '/crm/icsr'
+      fullPath: '/crm/icsr/'
+      preLoaderRoute: typeof CrmIcsrIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm/icsr/$id': {
+      id: '/crm/icsr/$id'
+      path: '/crm/icsr/$id'
+      fullPath: '/crm/icsr/$id'
+      preLoaderRoute: typeof CrmIcsrIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm/icsr/activity': {
+      id: '/crm/icsr/activity'
+      path: '/crm/icsr/activity'
+      fullPath: '/crm/icsr/activity'
+      preLoaderRoute: typeof CrmIcsrActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm/icsr/new': {
+      id: '/crm/icsr/new'
+      path: '/crm/icsr/new'
+      fullPath: '/crm/icsr/new'
+      preLoaderRoute: typeof CrmIcsrNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm/icsr/performance': {
+      id: '/crm/icsr/performance'
+      path: '/crm/icsr/performance'
+      fullPath: '/crm/icsr/performance'
+      preLoaderRoute: typeof CrmIcsrPerformanceRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
