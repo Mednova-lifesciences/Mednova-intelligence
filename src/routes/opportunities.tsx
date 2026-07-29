@@ -138,7 +138,7 @@ function OpportunityDetail({ o }: { o: Opportunity }) {
         <button
           onClick={onAdd}
           disabled={busy}
-          className="h-9 rounded-md bg-[--color-navy] px-4 text-sm font-semibold text-white disabled:opacity-60"
+          className="h-9 rounded-md bg-navy px-4 text-sm font-semibold text-navy-foreground disabled:opacity-60"
         >
           {busy ? "Adding…" : "Add Company to CRM"}
         </button>
@@ -155,7 +155,7 @@ function OpportunityDetail({ o }: { o: Opportunity }) {
               </button>
               <button
                 onClick={() => navigate({ to: "/crm/companies/$id", params: { id: notice.companyId } })}
-                className="h-8 rounded-md bg-[--color-navy] px-3 text-sm font-semibold text-white"
+                className="h-8 rounded-md bg-navy px-3 text-sm font-semibold text-navy-foreground"
               >
                 Open CRM
               </button>
