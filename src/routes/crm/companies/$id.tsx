@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -58,6 +58,9 @@ function CompanyDetail() {
     body: string;
     signature: string;
   } | null>(null);
+  const [generatingEmail, setGeneratingEmail] = useState(false);
+  const emailRef = useRef<HTMLDivElement | null>(null);
+  const [showAllOpps, setShowAllOpps] = useState<Record<string, boolean>>({});
 
   const { data: company } = useQuery({ queryKey: ["crm-company", id], queryFn: () => fetchCompany(id) });
   const { data: contacts } = useQuery({
