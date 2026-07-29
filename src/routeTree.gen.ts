@@ -13,6 +13,7 @@ import { Route as RenewalsRouteImport } from './routes/renewals'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
+import { Route as CrmIndexRouteImport } from './routes/crm/index'
 import { Route as ProductsIdRouteImport } from './routes/products/$id'
 
 const RenewalsRoute = RenewalsRouteImport.update({
@@ -35,6 +36,11 @@ const ProductsIndexRoute = ProductsIndexRouteImport.update({
   path: '/products/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrmIndexRoute = CrmIndexRouteImport.update({
+  id: '/crm/',
+  path: '/crm/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsIdRoute = ProductsIdRouteImport.update({
   id: '/products/$id',
   path: '/products/$id',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/opportunities': typeof OpportunitiesRoute
   '/renewals': typeof RenewalsRoute
   '/products/$id': typeof ProductsIdRoute
+  '/crm/': typeof CrmIndexRoute
   '/products/': typeof ProductsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/opportunities': typeof OpportunitiesRoute
   '/renewals': typeof RenewalsRoute
   '/products/$id': typeof ProductsIdRoute
+  '/crm': typeof CrmIndexRoute
   '/products': typeof ProductsIndexRoute
 }
 export interface FileRoutesById {
@@ -61,6 +69,7 @@ export interface FileRoutesById {
   '/opportunities': typeof OpportunitiesRoute
   '/renewals': typeof RenewalsRoute
   '/products/$id': typeof ProductsIdRoute
+  '/crm/': typeof CrmIndexRoute
   '/products/': typeof ProductsIndexRoute
 }
 export interface FileRouteTypes {
@@ -70,15 +79,23 @@ export interface FileRouteTypes {
     | '/opportunities'
     | '/renewals'
     | '/products/$id'
+    | '/crm/'
     | '/products/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/opportunities' | '/renewals' | '/products/$id' | '/products'
+  to:
+    | '/'
+    | '/opportunities'
+    | '/renewals'
+    | '/products/$id'
+    | '/crm'
+    | '/products'
   id:
     | '__root__'
     | '/'
     | '/opportunities'
     | '/renewals'
     | '/products/$id'
+    | '/crm/'
     | '/products/'
   fileRoutesById: FileRoutesById
 }
@@ -87,6 +104,7 @@ export interface RootRouteChildren {
   OpportunitiesRoute: typeof OpportunitiesRoute
   RenewalsRoute: typeof RenewalsRoute
   ProductsIdRoute: typeof ProductsIdRoute
+  CrmIndexRoute: typeof CrmIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
 }
 
@@ -120,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/': {
+      id: '/crm/'
+      path: '/crm'
+      fullPath: '/crm/'
+      preLoaderRoute: typeof CrmIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/$id': {
       id: '/products/$id'
       path: '/products/$id'
@@ -135,6 +160,7 @@ const rootRouteChildren: RootRouteChildren = {
   OpportunitiesRoute: OpportunitiesRoute,
   RenewalsRoute: RenewalsRoute,
   ProductsIdRoute: ProductsIdRoute,
+  CrmIndexRoute: CrmIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
 }
 export const routeTree = rootRouteImport
