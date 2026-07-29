@@ -202,9 +202,13 @@ function CompanyDetail() {
                 </option>
               ))}
             </select>
-            <button className={btnPrimary} onClick={onGenerateEmail}>
-              Generate email
+            <button className={btnGhost} onClick={onGenerateReport}>
+              Generate report
             </button>
+            <button className={btnPrimary} onClick={onGenerateEmail} disabled={generatingEmail}>
+              {generatingEmail ? "Generating…" : "Generate email"}
+            </button>
+
           </>
         }
       />
