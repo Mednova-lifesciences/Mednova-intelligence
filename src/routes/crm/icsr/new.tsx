@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Save, Send } from "lucide-react";
 import { CrmShell, CrmHeader, CrmCard, btnPrimary, btnGhost, inputClass } from "@/components/crm/CrmShell";
+import { DemoBanner } from "@/components/crm/DemoBanner";
 import {
   createCase,
   resolveDuplicate,
@@ -159,6 +160,7 @@ function NewCasePage() {
 
   return (
     <CrmShell>
+      <DemoBanner />
       <CrmHeader
         title="Report a suspected side effect"
         subtitle="You do not need to be certain the medicine caused the problem, and you do not need to complete every box. A report that arrives today is worth far more than a complete report that never arrives."

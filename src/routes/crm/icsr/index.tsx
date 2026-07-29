@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Download, ShieldAlert } from "lucide-react";
+import { Plus, Download, ShieldAlert, Activity } from "lucide-react";
 import { CrmShell, CrmHeader, btnPrimary, btnGhost, inputClass } from "@/components/crm/CrmShell";
 import {
   fetchCases,
@@ -90,6 +90,9 @@ function IcsrRegisterPage() {
         subtitle="Every report is logged at the moment of receipt — before triage, before validity assessment, and whether or not it later turns out to be a duplicate."
         actions={
           <>
+            <Link to="/crm/icsr/activity" className={btnGhost}>
+              <Activity className="h-4 w-4" /> Activity
+            </Link>
             <Link to="/crm/icsr/performance" className={btnGhost}>
               <ShieldAlert className="h-4 w-4" /> Performance
             </Link>

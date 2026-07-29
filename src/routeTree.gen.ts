@@ -28,6 +28,7 @@ import { Route as CrmEmailsIndexRouteImport } from './routes/crm/emails/index'
 import { Route as CrmCompaniesIndexRouteImport } from './routes/crm/companies/index'
 import { Route as CrmIcsrPerformanceRouteImport } from './routes/crm/icsr/performance'
 import { Route as CrmIcsrNewRouteImport } from './routes/crm/icsr/new'
+import { Route as CrmIcsrActivityRouteImport } from './routes/crm/icsr/activity'
 import { Route as CrmIcsrIdRouteImport } from './routes/crm/icsr/$id'
 import { Route as CrmGapIdRouteImport } from './routes/crm/gap/$id'
 import { Route as CrmEmailsComposeRouteImport } from './routes/crm/emails/compose'
@@ -128,6 +129,11 @@ const CrmIcsrNewRoute = CrmIcsrNewRouteImport.update({
   path: '/crm/icsr/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrmIcsrActivityRoute = CrmIcsrActivityRouteImport.update({
+  id: '/crm/icsr/activity',
+  path: '/crm/icsr/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrmIcsrIdRoute = CrmIcsrIdRouteImport.update({
   id: '/crm/icsr/$id',
   path: '/crm/icsr/$id',
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
   '/crm/gap/$id': typeof CrmGapIdRoute
   '/crm/icsr/$id': typeof CrmIcsrIdRoute
+  '/crm/icsr/activity': typeof CrmIcsrActivityRoute
   '/crm/icsr/new': typeof CrmIcsrNewRoute
   '/crm/icsr/performance': typeof CrmIcsrPerformanceRoute
   '/crm/companies/': typeof CrmCompaniesIndexRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
   '/crm/gap/$id': typeof CrmGapIdRoute
   '/crm/icsr/$id': typeof CrmIcsrIdRoute
+  '/crm/icsr/activity': typeof CrmIcsrActivityRoute
   '/crm/icsr/new': typeof CrmIcsrNewRoute
   '/crm/icsr/performance': typeof CrmIcsrPerformanceRoute
   '/crm/companies': typeof CrmCompaniesIndexRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
   '/crm/gap/$id': typeof CrmGapIdRoute
   '/crm/icsr/$id': typeof CrmIcsrIdRoute
+  '/crm/icsr/activity': typeof CrmIcsrActivityRoute
   '/crm/icsr/new': typeof CrmIcsrNewRoute
   '/crm/icsr/performance': typeof CrmIcsrPerformanceRoute
   '/crm/companies/': typeof CrmCompaniesIndexRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/crm/emails/compose'
     | '/crm/gap/$id'
     | '/crm/icsr/$id'
+    | '/crm/icsr/activity'
     | '/crm/icsr/new'
     | '/crm/icsr/performance'
     | '/crm/companies/'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/crm/emails/compose'
     | '/crm/gap/$id'
     | '/crm/icsr/$id'
+    | '/crm/icsr/activity'
     | '/crm/icsr/new'
     | '/crm/icsr/performance'
     | '/crm/companies'
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
     | '/crm/emails/compose'
     | '/crm/gap/$id'
     | '/crm/icsr/$id'
+    | '/crm/icsr/activity'
     | '/crm/icsr/new'
     | '/crm/icsr/performance'
     | '/crm/companies/'
@@ -321,6 +333,7 @@ export interface RootRouteChildren {
   CrmEmailsComposeRoute: typeof CrmEmailsComposeRoute
   CrmGapIdRoute: typeof CrmGapIdRoute
   CrmIcsrIdRoute: typeof CrmIcsrIdRoute
+  CrmIcsrActivityRoute: typeof CrmIcsrActivityRoute
   CrmIcsrNewRoute: typeof CrmIcsrNewRoute
   CrmIcsrPerformanceRoute: typeof CrmIcsrPerformanceRoute
   CrmCompaniesIndexRoute: typeof CrmCompaniesIndexRoute
@@ -464,6 +477,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmIcsrNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/icsr/activity': {
+      id: '/crm/icsr/activity'
+      path: '/crm/icsr/activity'
+      fullPath: '/crm/icsr/activity'
+      preLoaderRoute: typeof CrmIcsrActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crm/icsr/$id': {
       id: '/crm/icsr/$id'
       path: '/crm/icsr/$id'
@@ -513,6 +533,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrmEmailsComposeRoute: CrmEmailsComposeRoute,
   CrmGapIdRoute: CrmGapIdRoute,
   CrmIcsrIdRoute: CrmIcsrIdRoute,
+  CrmIcsrActivityRoute: CrmIcsrActivityRoute,
   CrmIcsrNewRoute: CrmIcsrNewRoute,
   CrmIcsrPerformanceRoute: CrmIcsrPerformanceRoute,
   CrmCompaniesIndexRoute: CrmCompaniesIndexRoute,
