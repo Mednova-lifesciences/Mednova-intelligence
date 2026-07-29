@@ -122,7 +122,7 @@ function OptButton({
       : tone === "r2"
         ? "bg-amber-500 border-amber-500 text-white"
         : tone === "r3"
-          ? "bg-moss border-moss text-white"
+          ? "bg-brand border-brand text-brand-foreground"
           : "bg-navy border-navy text-navy-foreground";
   return (
     <button
@@ -131,7 +131,7 @@ function OptButton({
       onClick={onClick}
       className={`rounded-sm border px-2.5 py-1.5 font-semibold transition-colors ${
         wide ? "text-[11.5px]" : "min-w-[31px] font-mono text-xs"
-      } ${on ? active : "border-border bg-card text-moss hover:border-moss"}`}
+      } ${on ? active : "border-border bg-card text-muted-foreground hover:border-brand"}`}
     >
       {children}
     </button>
@@ -416,7 +416,7 @@ function GapWorkbench() {
             <p className="font-mono text-[10px] text-muted-foreground">{printLine}</p>
           </div>
 
-          <div className="gap-noprint mb-5 rounded-sm border border-border border-l-[3px] border-l-amber-500 bg-card px-4 py-3 text-[12.5px] leading-relaxed text-moss">
+          <div className="gap-noprint mb-5 rounded-sm border border-border border-l-[3px] border-l-amber-500 bg-card px-4 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
             <b className="text-foreground">Score what is demonstrable today</b> — not what is intended, in draft,
             or believed to be happening. If a process operates reliably but leaves no record, it scores no higher
             than 2. Findings and actions open automatically once a gap exists. Everything is saved to the CRM as
@@ -442,7 +442,7 @@ function GapWorkbench() {
           </div>
 
           {shown === 0 && (
-            <div className="rounded-sm border border-border border-l-[3px] border-l-brand bg-card px-4 py-3 text-[12.5px] text-moss">
+            <div className="rounded-sm border border-border border-l-[3px] border-l-brand bg-card px-4 py-3 text-[12.5px] text-muted-foreground">
               <b className="text-foreground">Nothing matches this filter.</b>{" "}
               {filter === "todo"
                 ? "Every requirement has been scored."
@@ -501,12 +501,12 @@ function ItemCard({
       <div className="font-mono text-[10.5px] tracking-wide text-muted-foreground">{item.ref}</div>
       <h3 className="my-1 text-[14.5px] font-semibold leading-snug tracking-tight text-foreground">{item.req}</h3>
       <div className="mb-3 flex flex-wrap gap-1.5">
-        <span className="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[10px] tracking-wide text-moss">
+        <span className="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[10px] tracking-wide text-muted-foreground">
           {item.reg}
         </span>
       </div>
       <div className="mb-3 border-l-2 border-border pl-2.5 text-[12.5px] leading-snug text-muted-foreground">
-        <b className="mb-0.5 block font-mono text-[9.5px] font-semibold uppercase tracking-[0.12em] text-moss">
+        <b className="mb-0.5 block font-mono text-[9.5px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
           Evidence required
         </b>
         {item.ev}
