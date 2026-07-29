@@ -70,6 +70,36 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 function OpportunityDetail({ o }: { o: Opportunity }) {
+  const navigate = useNavigate();
+  const [notice, setNotice] = useState<{ message: string; companyId: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const onAdd = async () => {
+    setBusy(true);
+    try {
+      const result = await addCompanyFromOpportunity({
+        id: o.id,
+        company: o.company,
+        manufacturer: o.manufacturer,
+        category: o.category,
+        product: o.product,
+        estimated_value: Number(o.estimated_value),
+        priority: o.priority,
+        probability: o.probability,
+        service_type: o.service_type,
+      });
+      setNotice({
+        message: result.ok
+          ? "Company successfully added to CRM"
+          : "This company already exists in CRM.",
+        companyId: result.company.id,
+      });
+      window.setTimeout(() => setNotice(null), 10000);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="bg-muted/30 px-3 py-4">
       <h3 className="text-sm font-bold text-foreground">Opportunity Details</h3>
@@ -103,12 +133,39 @@ function OpportunityDetail({ o }: { o: Opportunity }) {
       </div>
 
       <h3 className="mt-5 text-sm font-bold text-foreground">Commercial Actions</h3>
-      <div className="mt-2 rounded-md border border-border bg-card p-4 text-sm text-muted-foreground">
-        CRM integration will be implemented in a future version.
+      <div className="mt-2 rounded-md border border-border bg-card p-4">
+        <button
+          onClick={onAdd}
+          disabled={busy}
+          className="h-9 rounded-md bg-[--color-navy] px-4 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          {busy ? "Adding…" : "Add Company to CRM"}
+        </button>
+
+        {notice && (
+          <div className="mt-4 rounded-md border border-border bg-muted/40 p-4">
+            <p className="text-sm font-semibold text-foreground">{notice.message}</p>
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => setNotice(null)}
+                className="h-8 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground"
+              >
+                Continue
+              </button>
+              <button
+                onClick={() => navigate({ to: "/crm/companies/$id", params: { id: notice.companyId } })}
+                className="h-8 rounded-md bg-[--color-navy] px-3 text-sm font-semibold text-white"
+              >
+                Open CRM
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
 
 const COLUMNS = [
   "Opportunity ID",
