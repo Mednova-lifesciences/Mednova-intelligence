@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { CrmShell, CrmHeader, CrmCard } from "@/components/crm/CrmShell";
 import { fetchCompanies, fetchContacts, fetchTasks, fetchEmails } from "@/lib/crm-queries";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchCases } from "@/lib/icsr-queries";
+
 
 export const Route = createFileRoute("/crm/search")({
   validateSearch: (s: Record<string, unknown>) => ({ q: typeof s.q === "string" ? s.q : "" }),
