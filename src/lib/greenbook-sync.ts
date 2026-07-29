@@ -70,13 +70,15 @@ export async function runGreenBookSync(supabaseAdmin: any) {
 
         const normalized: any = {
           product_name: (r.product_name ?? "").toString().replaceAll("#", "").replaceAll("*", ""),
-          manufacturer: r.manufacturer ?? null,
-          applicant: r.applicant?.name ?? null,
+          manufacturer:
+            r.manufacturer?.name ?? r.manufacturer_name ?? r.applicant_name ?? null,
+          applicant: r.applicant?.name ?? r.applicant_name ?? null,
           category: r.product_category?.name ?? r.category_name ?? null,
-          dosage_form: r.form?.name ?? null,
-          route: r.route?.name ?? null,
+          dosage_form: r.form?.name ?? r.form_name ?? null,
+          route: r.route?.name ?? r.route_name ?? null,
           nafdac_number: r.NAFDAC ?? null,
-          registration_date: null,
+          registration_date:
+            r.registration_date ?? r.approval_date ?? (r.created_at ? String(r.created_at).split("T")[0] : null),
           approval_date: r.approval_date ?? null,
           expiry_date: r.expiry_date ?? null,
           status: r.status ?? "Active",
@@ -96,15 +98,23 @@ export async function runGreenBookSync(supabaseAdmin: any) {
           const { error: insErr } = await supabaseAdmin.from("products").insert(normalized);
           if (insErr) throw insErr;
           added += 1;
-        } else if (isChanged) {
-          const { error: updErr } = await supabaseAdmin
-            .from("products")
-            .update(normalized)
-            .eq("id", existing.id);
-          if (updErr) throw updErr;
-          updated += 1;
         } else {
-          unchanged += 1;
+          const needsUpdate =
+            isChanged ||
+            existing.manufacturer !== normalized.manufacturer ||
+            existing.registration_date !== normalized.registration_date ||
+            existing.applicant !== normalized.applicant;
+
+          if (needsUpdate) {
+            const { error: updErr } = await supabaseAdmin
+              .from("products")
+              .update(normalized)
+              .eq("id", existing.id);
+            if (updErr) throw updErr;
+            updated += 1;
+          } else {
+            unchanged += 1;
+          }
         }
       }
 
@@ -117,24 +127,35 @@ export async function runGreenBookSync(supabaseAdmin: any) {
     await supabaseAdmin.from("opportunities").delete();
     const byManufacturer: Record<string, any[]> = {};
     for (const p of allProducts ?? []) {
-      if (p.manufacturer) {
-        byManufacturer[p.manufacturer] = byManufacturer[p.manufacturer] || [];
-        byManufacturer[p.manufacturer].push(p);
+      const owner = p.manufacturer ?? p.applicant;
+      if (owner) {
+        byManufacturer[owner] = byManufacturer[owner] || [];
+        byManufacturer[owner].push(p);
       }
     }
     const oppInserts: any[] = [];
     for (const [m, ps] of Object.entries(byManufacturer)) {
+      const expiryDates = ps
+        .map((p) => p.expiry_date)
+        .filter(Boolean)
+        .sort();
       oppInserts.push({
         company: m,
+        manufacturer: m,
+        product: ps.length === 1 ? ps[0].product_name : `${ps.length} products`,
         category: ps[0].category ?? null,
         product_count: ps.length,
         estimated_value: ps.length * 500000,
         services: "Registration support, renewal monitoring",
         opportunity_type: "Manufacturer Renewal Watch",
+        service_type: "Manufacturer Renewal Watch",
         status: "active",
         priority: ps.length * 500000 > 5000000 ? "high" : ps.length * 500000 > 1000000 ? "medium" : "low",
         probability: ps.length * 500000 > 5000000 ? 80 : ps.length * 500000 > 1000000 ? 60 : 40,
         close_date: new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString().slice(0, 10),
+        expiry_date: expiryDates[0] ?? null,
+        recommendation: `Monitor ${m} for ${ps.length} active registration${ps.length === 1 ? "" : "s"} and renewal opportunities.`,
+        source_product_id: ps[0]?.id ?? null,
       });
     }
     if (oppInserts.length) {

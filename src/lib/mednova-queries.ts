@@ -71,6 +71,14 @@ export type ProductFilters = {
   page: number;
 };
 
+function normalizeProductRow(product: Product): Product {
+  return {
+    ...product,
+    manufacturer: product.manufacturer ?? product.applicant ?? null,
+    registration_date: product.registration_date ?? product.approval_date ?? null,
+  };
+}
+
 export async function fetchProducts(f: ProductFilters) {
   let query = supabase.from("products").select("*", { count: "exact" });
 
@@ -105,13 +113,13 @@ export async function fetchProducts(f: ProductFilters) {
 
   const { data, error, count } = await query;
   if (error) throw error;
-  return { rows: (data ?? []) as Product[], count: count ?? 0 };
+  return { rows: (data ?? []).map(normalizeProductRow) as Product[], count: count ?? 0 };
 }
 
 export async function fetchProduct(id: string) {
   const { data, error } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
   if (error) throw error;
-  return data as Product | null;
+  return data ? normalizeProductRow(data as Product) : null;
 }
 
 export async function fetchRenewals(months: number) {
@@ -135,16 +143,34 @@ export type Opportunity = {
   company: string;
   manufacturer: string | null;
   product: string | null;
+  product_count?: number;
   category: string | null;
   service_type: string | null;
+  opportunity_type?: string | null;
   estimated_value: number;
   probability: number;
   priority: string;
   expiry_date: string | null;
+  close_date?: string | null;
   status: string;
   recommendation: string | null;
   created_at: string;
 };
+
+function normalizeOpportunityRow(o: Opportunity): Opportunity {
+  return {
+    ...o,
+    manufacturer: o.manufacturer ?? o.company ?? null,
+    product: o.product ?? (o.product_count ? `${o.product_count} products` : null),
+    service_type: o.service_type ?? o.opportunity_type ?? null,
+    expiry_date: o.expiry_date ?? o.close_date ?? null,
+    recommendation:
+      o.recommendation ??
+      (o.opportunity_type
+        ? `This is a ${o.opportunity_type} opportunity for ${o.company}.`
+        : null),
+  };
+}
 
 export type OpportunityStats = {
   total: number;
@@ -215,5 +241,5 @@ export async function fetchOpportunitiesPage(f: OpportunityFilters) {
 
   const { data, error, count } = await query;
   if (error) throw error;
-  return { rows: (data ?? []) as unknown as Opportunity[], count: count ?? 0 };
+  return { rows: (data ?? []).map(normalizeOpportunityRow) as Opportunity[], count: count ?? 0 };
 }
