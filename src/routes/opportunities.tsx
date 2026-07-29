@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { addCompanyFromOpportunity } from "@/lib/crm-queries";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { AppShell, Card, PageTitle, dash, naira } from "@/components/mednova/AppShell";
 import {
