@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { CrmShell, CrmHeader, CrmCard } from "@/components/crm/CrmShell";
 import { fetchCompanies, fetchContacts, fetchTasks, fetchEmails } from "@/lib/crm-queries";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchCases } from "@/lib/icsr-queries";
+
 
 export const Route = createFileRoute("/crm/search")({
   validateSearch: (s: Record<string, unknown>) => ({ q: typeof s.q === "string" ? s.q : "" }),
@@ -20,14 +22,15 @@ export const Route = createFileRoute("/crm/search")({
 });
 
 async function globalSearch(q: string) {
-  if (!q.trim()) return { companies: [], contacts: [], tasks: [], emails: [], products: [] };
+  if (!q.trim()) return { companies: [], contacts: [], tasks: [], emails: [], products: [], cases: [] };
   const like = `%${q}%`;
-  const [companies, contacts, tasks, emails, products] = await Promise.all([
+  const [companies, contacts, tasks, emails, products, cases] = await Promise.all([
     fetchCompanies({ search: q }),
     fetchContacts({ search: q }),
     fetchTasks(),
     fetchEmails(),
     supabase.from("products").select("id, product_name, manufacturer").ilike("product_name", like).limit(15),
+    fetchCases({ search: q }),
   ]);
   return {
     companies,
@@ -37,8 +40,10 @@ async function globalSearch(q: string) {
       (e.subject ?? "").toLowerCase().includes(q.toLowerCase()),
     ),
     products: products.data ?? [],
+    cases: cases.slice(0, 25),
   };
 }
+
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -92,9 +97,17 @@ function SearchPage() {
             </div>
           ))}
         </Section>
+        <Section title={`ICSR cases (${data?.cases.length ?? 0})`}>
+          {(data?.cases ?? []).map((c) => (
+            <Link key={c.id} to="/crm/icsr/$id" params={{ id: c.id }} className="block py-2 hover:text-brand">
+              {c.case_ref} · {c.product ?? "—"} · {c.patient_initials ?? "—"} · {c.seriousness ?? "—"} · {c.status}
+            </Link>
+          ))}
+        </Section>
         <Section title="Reports">
           <p className="py-2 text-muted-foreground">Report search will be available with AI reports.</p>
         </Section>
+
       </div>
     </CrmShell>
   );

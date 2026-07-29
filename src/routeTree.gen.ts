@@ -22,8 +22,12 @@ import { Route as CrmPipelineRouteImport } from './routes/crm/pipeline'
 import { Route as CrmNotesRouteImport } from './routes/crm/notes'
 import { Route as CrmContactsRouteImport } from './routes/crm/contacts'
 import { Route as CrmActivitiesRouteImport } from './routes/crm/activities'
+import { Route as CrmIcsrIndexRouteImport } from './routes/crm/icsr/index'
 import { Route as CrmEmailsIndexRouteImport } from './routes/crm/emails/index'
 import { Route as CrmCompaniesIndexRouteImport } from './routes/crm/companies/index'
+import { Route as CrmIcsrPerformanceRouteImport } from './routes/crm/icsr/performance'
+import { Route as CrmIcsrNewRouteImport } from './routes/crm/icsr/new'
+import { Route as CrmIcsrIdRouteImport } from './routes/crm/icsr/$id'
 import { Route as CrmEmailsComposeRouteImport } from './routes/crm/emails/compose'
 import { Route as CrmCompaniesIdRouteImport } from './routes/crm/companies/$id'
 
@@ -92,6 +96,11 @@ const CrmActivitiesRoute = CrmActivitiesRouteImport.update({
   path: '/crm/activities',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrmIcsrIndexRoute = CrmIcsrIndexRouteImport.update({
+  id: '/crm/icsr/',
+  path: '/crm/icsr/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrmEmailsIndexRoute = CrmEmailsIndexRouteImport.update({
   id: '/crm/emails/',
   path: '/crm/emails/',
@@ -100,6 +109,21 @@ const CrmEmailsIndexRoute = CrmEmailsIndexRouteImport.update({
 const CrmCompaniesIndexRoute = CrmCompaniesIndexRouteImport.update({
   id: '/crm/companies/',
   path: '/crm/companies/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmIcsrPerformanceRoute = CrmIcsrPerformanceRouteImport.update({
+  id: '/crm/icsr/performance',
+  path: '/crm/icsr/performance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmIcsrNewRoute = CrmIcsrNewRouteImport.update({
+  id: '/crm/icsr/new',
+  path: '/crm/icsr/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmIcsrIdRoute = CrmIcsrIdRouteImport.update({
+  id: '/crm/icsr/$id',
+  path: '/crm/icsr/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrmEmailsComposeRoute = CrmEmailsComposeRouteImport.update({
@@ -129,8 +153,12 @@ export interface FileRoutesByFullPath {
   '/products/': typeof ProductsIndexRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
+  '/crm/icsr/$id': typeof CrmIcsrIdRoute
+  '/crm/icsr/new': typeof CrmIcsrNewRoute
+  '/crm/icsr/performance': typeof CrmIcsrPerformanceRoute
   '/crm/companies/': typeof CrmCompaniesIndexRoute
   '/crm/emails/': typeof CrmEmailsIndexRoute
+  '/crm/icsr/': typeof CrmIcsrIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -148,8 +176,12 @@ export interface FileRoutesByTo {
   '/products': typeof ProductsIndexRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
+  '/crm/icsr/$id': typeof CrmIcsrIdRoute
+  '/crm/icsr/new': typeof CrmIcsrNewRoute
+  '/crm/icsr/performance': typeof CrmIcsrPerformanceRoute
   '/crm/companies': typeof CrmCompaniesIndexRoute
   '/crm/emails': typeof CrmEmailsIndexRoute
+  '/crm/icsr': typeof CrmIcsrIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -168,8 +200,12 @@ export interface FileRoutesById {
   '/products/': typeof ProductsIndexRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
+  '/crm/icsr/$id': typeof CrmIcsrIdRoute
+  '/crm/icsr/new': typeof CrmIcsrNewRoute
+  '/crm/icsr/performance': typeof CrmIcsrPerformanceRoute
   '/crm/companies/': typeof CrmCompaniesIndexRoute
   '/crm/emails/': typeof CrmEmailsIndexRoute
+  '/crm/icsr/': typeof CrmIcsrIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -189,8 +225,12 @@ export interface FileRouteTypes {
     | '/products/'
     | '/crm/companies/$id'
     | '/crm/emails/compose'
+    | '/crm/icsr/$id'
+    | '/crm/icsr/new'
+    | '/crm/icsr/performance'
     | '/crm/companies/'
     | '/crm/emails/'
+    | '/crm/icsr/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -208,8 +248,12 @@ export interface FileRouteTypes {
     | '/products'
     | '/crm/companies/$id'
     | '/crm/emails/compose'
+    | '/crm/icsr/$id'
+    | '/crm/icsr/new'
+    | '/crm/icsr/performance'
     | '/crm/companies'
     | '/crm/emails'
+    | '/crm/icsr'
   id:
     | '__root__'
     | '/'
@@ -227,8 +271,12 @@ export interface FileRouteTypes {
     | '/products/'
     | '/crm/companies/$id'
     | '/crm/emails/compose'
+    | '/crm/icsr/$id'
+    | '/crm/icsr/new'
+    | '/crm/icsr/performance'
     | '/crm/companies/'
     | '/crm/emails/'
+    | '/crm/icsr/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -247,8 +295,12 @@ export interface RootRouteChildren {
   ProductsIndexRoute: typeof ProductsIndexRoute
   CrmCompaniesIdRoute: typeof CrmCompaniesIdRoute
   CrmEmailsComposeRoute: typeof CrmEmailsComposeRoute
+  CrmIcsrIdRoute: typeof CrmIcsrIdRoute
+  CrmIcsrNewRoute: typeof CrmIcsrNewRoute
+  CrmIcsrPerformanceRoute: typeof CrmIcsrPerformanceRoute
   CrmCompaniesIndexRoute: typeof CrmCompaniesIndexRoute
   CrmEmailsIndexRoute: typeof CrmEmailsIndexRoute
+  CrmIcsrIndexRoute: typeof CrmIcsrIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -344,6 +396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmActivitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/icsr/': {
+      id: '/crm/icsr/'
+      path: '/crm/icsr'
+      fullPath: '/crm/icsr/'
+      preLoaderRoute: typeof CrmIcsrIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crm/emails/': {
       id: '/crm/emails/'
       path: '/crm/emails'
@@ -356,6 +415,27 @@ declare module '@tanstack/react-router' {
       path: '/crm/companies'
       fullPath: '/crm/companies/'
       preLoaderRoute: typeof CrmCompaniesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm/icsr/performance': {
+      id: '/crm/icsr/performance'
+      path: '/crm/icsr/performance'
+      fullPath: '/crm/icsr/performance'
+      preLoaderRoute: typeof CrmIcsrPerformanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm/icsr/new': {
+      id: '/crm/icsr/new'
+      path: '/crm/icsr/new'
+      fullPath: '/crm/icsr/new'
+      preLoaderRoute: typeof CrmIcsrNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm/icsr/$id': {
+      id: '/crm/icsr/$id'
+      path: '/crm/icsr/$id'
+      fullPath: '/crm/icsr/$id'
+      preLoaderRoute: typeof CrmIcsrIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crm/emails/compose': {
@@ -391,8 +471,12 @@ const rootRouteChildren: RootRouteChildren = {
   ProductsIndexRoute: ProductsIndexRoute,
   CrmCompaniesIdRoute: CrmCompaniesIdRoute,
   CrmEmailsComposeRoute: CrmEmailsComposeRoute,
+  CrmIcsrIdRoute: CrmIcsrIdRoute,
+  CrmIcsrNewRoute: CrmIcsrNewRoute,
+  CrmIcsrPerformanceRoute: CrmIcsrPerformanceRoute,
   CrmCompaniesIndexRoute: CrmCompaniesIndexRoute,
   CrmEmailsIndexRoute: CrmEmailsIndexRoute,
+  CrmIcsrIndexRoute: CrmIcsrIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

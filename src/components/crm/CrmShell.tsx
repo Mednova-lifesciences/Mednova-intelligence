@@ -15,6 +15,7 @@ import {
   Search,
   Bell,
   FileText,
+  ShieldAlert,
 } from "lucide-react";
 
 const NAV = [
@@ -27,7 +28,9 @@ const NAV = [
   { to: "/crm/emails", label: "Emails", icon: Mail },
   { to: "/crm/reports", label: "Reports", icon: BarChart3 },
   { to: "/crm/notes", label: "Notes", icon: StickyNote },
+  { to: "/crm/icsr", label: "Pharmacovigilance", icon: ShieldAlert },
 ] as const;
+
 
 
 export function CrmShell({ children }: { children: ReactNode }) {
