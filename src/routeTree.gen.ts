@@ -26,6 +26,7 @@ import { Route as CrmIcsrIndexRouteImport } from './routes/crm/icsr/index'
 import { Route as CrmEmailsIndexRouteImport } from './routes/crm/emails/index'
 import { Route as CrmCompaniesIndexRouteImport } from './routes/crm/companies/index'
 import { Route as CrmIcsrNewRouteImport } from './routes/crm/icsr/new'
+import { Route as CrmIcsrIdRouteImport } from './routes/crm/icsr/$id'
 import { Route as CrmEmailsComposeRouteImport } from './routes/crm/emails/compose'
 import { Route as CrmCompaniesIdRouteImport } from './routes/crm/companies/$id'
 
@@ -114,6 +115,11 @@ const CrmIcsrNewRoute = CrmIcsrNewRouteImport.update({
   path: '/crm/icsr/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrmIcsrIdRoute = CrmIcsrIdRouteImport.update({
+  id: '/crm/icsr/$id',
+  path: '/crm/icsr/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrmEmailsComposeRoute = CrmEmailsComposeRouteImport.update({
   id: '/crm/emails/compose',
   path: '/crm/emails/compose',
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/products/': typeof ProductsIndexRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
+  '/crm/icsr/$id': typeof CrmIcsrIdRoute
   '/crm/icsr/new': typeof CrmIcsrNewRoute
   '/crm/companies/': typeof CrmCompaniesIndexRoute
   '/crm/emails/': typeof CrmEmailsIndexRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/products': typeof ProductsIndexRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
+  '/crm/icsr/$id': typeof CrmIcsrIdRoute
   '/crm/icsr/new': typeof CrmIcsrNewRoute
   '/crm/companies': typeof CrmCompaniesIndexRoute
   '/crm/emails': typeof CrmEmailsIndexRoute
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/products/': typeof ProductsIndexRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
   '/crm/emails/compose': typeof CrmEmailsComposeRoute
+  '/crm/icsr/$id': typeof CrmIcsrIdRoute
   '/crm/icsr/new': typeof CrmIcsrNewRoute
   '/crm/companies/': typeof CrmCompaniesIndexRoute
   '/crm/emails/': typeof CrmEmailsIndexRoute
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/products/'
     | '/crm/companies/$id'
     | '/crm/emails/compose'
+    | '/crm/icsr/$id'
     | '/crm/icsr/new'
     | '/crm/companies/'
     | '/crm/emails/'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/crm/companies/$id'
     | '/crm/emails/compose'
+    | '/crm/icsr/$id'
     | '/crm/icsr/new'
     | '/crm/companies'
     | '/crm/emails'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/products/'
     | '/crm/companies/$id'
     | '/crm/emails/compose'
+    | '/crm/icsr/$id'
     | '/crm/icsr/new'
     | '/crm/companies/'
     | '/crm/emails/'
@@ -271,6 +283,7 @@ export interface RootRouteChildren {
   ProductsIndexRoute: typeof ProductsIndexRoute
   CrmCompaniesIdRoute: typeof CrmCompaniesIdRoute
   CrmEmailsComposeRoute: typeof CrmEmailsComposeRoute
+  CrmIcsrIdRoute: typeof CrmIcsrIdRoute
   CrmIcsrNewRoute: typeof CrmIcsrNewRoute
   CrmCompaniesIndexRoute: typeof CrmCompaniesIndexRoute
   CrmEmailsIndexRoute: typeof CrmEmailsIndexRoute
@@ -398,6 +411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmIcsrNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/icsr/$id': {
+      id: '/crm/icsr/$id'
+      path: '/crm/icsr/$id'
+      fullPath: '/crm/icsr/$id'
+      preLoaderRoute: typeof CrmIcsrIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crm/emails/compose': {
       id: '/crm/emails/compose'
       path: '/crm/emails/compose'
@@ -431,6 +451,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProductsIndexRoute: ProductsIndexRoute,
   CrmCompaniesIdRoute: CrmCompaniesIdRoute,
   CrmEmailsComposeRoute: CrmEmailsComposeRoute,
+  CrmIcsrIdRoute: CrmIcsrIdRoute,
   CrmIcsrNewRoute: CrmIcsrNewRoute,
   CrmCompaniesIndexRoute: CrmCompaniesIndexRoute,
   CrmEmailsIndexRoute: CrmEmailsIndexRoute,
