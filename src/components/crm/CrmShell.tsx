@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import logo from "@/assets/mednova-logo.png.asset.json";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import {
@@ -13,7 +14,6 @@ import {
   StickyNote,
   Search,
   Bell,
-  Sparkles,
   FileText,
 } from "lucide-react";
 
@@ -38,12 +38,13 @@ export function CrmShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-canvas">
       <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col bg-navy text-navy-foreground">
         <div className="flex items-center gap-3 border-b border-white/5 px-5 py-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand text-brand-foreground">
-            <Sparkles className="h-5 w-5" />
-          </div>
           <div>
-            <div className="text-sm font-bold leading-tight">MedNovaOS</div>
-            <div className="text-xs text-navy-muted">CRM</div>
+            <img
+              src={logo.url}
+              alt="MedNova Lifesciences logo"
+              className="h-7 w-auto brightness-0 invert"
+            />
+            <div className="mt-1 text-[11px] font-semibold tracking-widest text-navy-muted">CRM WORKSPACE</div>
           </div>
         </div>
 
