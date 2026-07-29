@@ -10,11 +10,14 @@ import {
   fetchContacts,
   fetchActivities,
   fetchStageHistory,
+  fetchNotes,
+  fetchEmails,
   insertContacts,
   moveCompanyStage,
   PIPELINE_STAGES,
   type PipelineStage,
 } from "@/lib/crm-queries";
+import { NoteEditor, NoteList } from "@/routes/crm/notes";
 import { getCompanyIntelligence, discoverContacts, generateEmail } from "@/lib/crm-integrations.functions";
 
 export const Route = createFileRoute("/crm/companies/$id")({
@@ -81,6 +84,12 @@ function CompanyDetail() {
     queryFn: () => fetchActivities(20, id),
   });
   const { data: history } = useQuery({ queryKey: ["crm-stage-history", id], queryFn: () => fetchStageHistory(id) });
+  const { data: notes } = useQuery({ queryKey: ["crm-notes", id], queryFn: () => fetchNotes({ companyId: id }) });
+  const { data: companyEmails } = useQuery({ queryKey: ["crm-emails", id], queryFn: () => fetchEmails(id) });
+  const refreshNotes = () => {
+    qc.invalidateQueries({ queryKey: ["crm-notes", id] });
+    qc.invalidateQueries({ queryKey: ["crm-activities", id] });
+  };
 
   if (!company) {
     return (
@@ -354,15 +363,75 @@ function CompanyDetail() {
           </CrmCard>
         )}
 
+        <CrmCard>
+          <h2 className="text-base font-bold text-foreground">Notes</h2>
+          <div className="mt-3">
+            <NoteEditor companyId={company.id} onSaved={refreshNotes} />
+          </div>
+          <div className="mt-4">
+            <NoteList notes={notes ?? []} onChanged={refreshNotes} />
+          </div>
+        </CrmCard>
+
+        <CrmCard>
+          <h2 className="text-base font-bold text-foreground">Email history</h2>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-muted-foreground">
+                  <th className="px-3 py-2 font-medium">Subject</th>
+                  <th className="px-3 py-2 font-medium">To</th>
+                  <th className="px-3 py-2 font-medium">Status</th>
+                  <th className="px-3 py-2 font-medium">Sent by</th>
+                  <th className="px-3 py-2 font-medium">Sent date</th>
+                  <th className="px-3 py-2 font-medium">Opened</th>
+                  <th className="px-3 py-2 font-medium">Replied</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(companyEmails ?? []).length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">
+                      No emails for this company yet.
+                    </td>
+                  </tr>
+                )}
+                {(companyEmails ?? []).map((e) => (
+                  <tr key={e.id} className="border-b border-border last:border-0">
+                    <td className="px-3 py-2 font-medium">{e.subject ?? "—"}</td>
+                    <td className="px-3 py-2">{e.to_address ?? "—"}</td>
+                    <td className="px-3 py-2 capitalize">{e.status}</td>
+                    <td className="px-3 py-2">{e.sent_by}</td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {e.sent_at ? new Date(e.sent_at).toLocaleString() : "—"}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {e.opened_at ? new Date(e.opened_at).toLocaleString() : "Tracking pending"}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {e.replied_at ? new Date(e.replied_at).toLocaleString() : "Tracking pending"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CrmCard>
+
         <div className="grid gap-6 lg:grid-cols-2">
           <CrmCard>
-            <h2 className="text-base font-bold text-foreground">Activity</h2>
+            <h2 className="text-base font-bold text-foreground">Activity history</h2>
             <div className="mt-3 divide-y divide-border text-sm">
               {(activities ?? []).length === 0 && <p className="py-4 text-muted-foreground">No activity yet.</p>}
               {(activities ?? []).map((a) => (
-                <div key={a.id} className="flex items-center justify-between py-2">
-                  <span>{a.message}</span>
-                  <span className="text-xs text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
+                <div key={a.id} className="flex items-start justify-between gap-3 py-2">
+                  <div>
+                    <div className="font-medium text-foreground">{a.activity_type}</div>
+                    <div className="text-muted-foreground">{a.message}</div>
+                  </div>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {a.actor} · {new Date(a.created_at).toLocaleDateString()}
+                  </span>
                 </div>
               ))}
             </div>
