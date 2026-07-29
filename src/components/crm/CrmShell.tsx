@@ -10,7 +10,7 @@ import {
   GitBranch,
   Mail,
   BarChart3,
-  Settings,
+  StickyNote,
   Search,
   Bell,
   Sparkles,
@@ -26,8 +26,9 @@ const NAV = [
   { to: "/crm/pipeline", label: "Pipeline", icon: GitBranch },
   { to: "/crm/emails", label: "Emails", icon: Mail },
   { to: "/crm/reports", label: "Reports", icon: BarChart3 },
-  { to: "/crm/settings", label: "Settings", icon: Settings },
+  { to: "/crm/notes", label: "Notes", icon: StickyNote },
 ] as const;
+
 
 export function CrmShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
