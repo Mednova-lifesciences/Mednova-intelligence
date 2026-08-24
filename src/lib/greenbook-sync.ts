@@ -39,16 +39,39 @@ export async function syncGreenBookBatch(
   });
 
   const url = `${GREENBOOK_URL}?${params.toString()}`;
-  const res = await fetch(url, {
-    headers: {
-      Accept: "application/json, text/javascript, */*; q=0.01",
-      "X-Requested-With": "XMLHttpRequest",
-      Referer: GREENBOOK_URL,
-    },
-  });
+  const maxRetries = 3;
+  let lastErr: any = null;
+  let json: any = null;
 
-  if (!res.ok) throw new Error(`Green Book request failed ${res.status}`);
-  const json = await res.json();
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          Accept: "application/json, text/javascript, */*; q=0.01",
+          "X-Requested-With": "XMLHttpRequest",
+          Referer: GREENBOOK_URL,
+        },
+      });
+      if (!res.ok) throw new Error(`Green Book request failed ${res.status}`);
+      json = await res.json();
+      lastErr = null;
+      break;
+    } catch (err: any) {
+      lastErr = err;
+      const cause = err?.cause ? ` (cause: ${err.cause.code ?? err.cause.message ?? err.cause})` : "";
+      console.error(
+        `[greenbook-sync] fetch attempt ${attempt + 1}/${maxRetries + 1} failed for start=${start}: ${err?.message}${cause}`,
+      );
+      if (attempt < maxRetries) {
+        await new Promise((r) => setTimeout(r, 500 * 2 ** attempt));
+      }
+    }
+  }
+
+  if (lastErr) {
+    const cause = lastErr?.cause ? ` (cause: ${lastErr.cause.code ?? lastErr.cause.message ?? lastErr.cause})` : "";
+    throw new Error(`Green Book request failed after ${maxRetries + 1} attempts: ${lastErr?.message}${cause}`);
+  }
 
   const recordsTotal = Number(json.recordsTotal ?? json.recordsFiltered ?? 0) || 0;
   const rows = Array.isArray(json.data) ? json.data : [];
