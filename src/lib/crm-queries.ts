@@ -201,7 +201,11 @@ export async function addCompanyFromOpportunity(o: {
       name: o.company,
       manufacturer,
       category: o.category,
-      country: null,
+      // Every company here comes from the NAFDAC Green Book, which only
+      // regulates the Nigerian market -- there's no ambiguity to resolve.
+      // Previously left null (always rendered as "Unknown"); nothing in
+      // the sync pipeline ever populated it.
+      country: "Nigeria",
       portfolio: o.service_type,
       estimated_value: o.estimated_value,
       priority: o.priority,
