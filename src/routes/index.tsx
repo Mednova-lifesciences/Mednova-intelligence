@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,7 +8,11 @@ import {
   fetchLastSync,
   fetchOpportunities,
 } from "@/lib/mednova-queries";
-import { syncGreenBook } from "@/lib/sync.functions";
+import {
+  syncGreenBookBatch,
+  finalizeGreenBookSync,
+  recordGreenBookSyncFailure,
+} from "@/lib/sync.functions";
 import { backfillCompanyManufacturers } from "@/lib/maintenance.functions";
 
 export const Route = createFileRoute("/")({
@@ -46,12 +51,59 @@ function Dashboard() {
     queryKey: ["opportunities", 8],
     queryFn: () => fetchOpportunities(8),
   });
-  const runSync = useServerFn(syncGreenBook);
+  const runBatch = useServerFn(syncGreenBookBatch);
+  const runFinalize = useServerFn(finalizeGreenBookSync);
+  const runRecordFailure = useServerFn(recordGreenBookSyncFailure);
   const runBackfill = useServerFn(backfillCompanyManufacturers);
+
+  const [syncProgress, setSyncProgress] = useState<{
+    processed: number;
+    total: number;
+    added: number;
+    updated: number;
+  } | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
   const sync = useMutation({
-    mutationFn: () => runSync(),
+    mutationFn: async () => {
+      setSyncError(null);
+      const batchId = crypto.randomUUID();
+      const startedAt = new Date().toISOString();
+      let start = 0;
+      let totals = { added: 0, updated: 0, unchanged: 0 };
+      let recordsTotal = 0;
+      let processed = 0;
+
+      try {
+        while (true) {
+          const result = await runBatch({ data: { batchId, start } });
+          recordsTotal = result.recordsTotal;
+          processed += result.processed;
+          totals = {
+            added: totals.added + result.added,
+            updated: totals.updated + result.updated,
+            unchanged: totals.unchanged + result.unchanged,
+          };
+          setSyncProgress({ processed, total: recordsTotal, added: totals.added, updated: totals.updated });
+
+          if (result.done) break;
+          start = result.nextStart;
+        }
+
+        await runFinalize({ data: { ...totals, startedAt } });
+      } catch (err: any) {
+        await runRecordFailure({
+          data: { message: err?.message ?? String(err), startedAt, added: totals.added, updated: totals.updated },
+        }).catch(() => {});
+        throw err;
+      }
+    },
     onSuccess: () => {
+      setSyncProgress(null);
       qc.invalidateQueries();
+    },
+    onError: (err: any) => {
+      setSyncError(err?.message ?? "Sync failed — see sync history for details.");
     },
   });
   const backfill = useMutation({
@@ -87,7 +139,11 @@ function Dashboard() {
               disabled={sync.isPending}
               className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-navy-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
             >
-              {sync.isPending ? "Syncing…" : "Sync Green Book"}
+              {sync.isPending
+                ? syncProgress
+                  ? `Syncing… ${syncProgress.processed.toLocaleString()}/${syncProgress.total.toLocaleString()}`
+                  : "Syncing…"
+                : "Sync Green Book"}
             </button>
             <button
               onClick={() => backfill.mutate()}
@@ -107,6 +163,11 @@ function Dashboard() {
             ? "loading…"
             : `${dash(lastSync.data?.status)} · ${lastSync.data?.records_added ?? 0} added`}
         </p>
+        {syncError && (
+          <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            Sync failed: {syncError}
+          </p>
+        )}
       </Card>
 
       <Card className="mt-6">
