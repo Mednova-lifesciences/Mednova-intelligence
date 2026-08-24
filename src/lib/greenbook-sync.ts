@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { openaiChatJSON } from "./crm-integrations.server";
 
 const GREENBOOK_URL = "https://greenbook.nafdac.gov.ng/";
 
@@ -166,18 +167,41 @@ const OPPORTUNITY_TYPES = {
 } as const;
 
 /**
- * Placeholder per-product service-fee estimates, differentiated by rough
- * service complexity (reactivating a lapsed registration is more work than
- * routine renewal monitoring, etc). These are NOT real market pricing --
- * there's no pricing data source wired in. Swap in real numbers here if an
- * actual fee schedule exists.
+ * Static fallback per-product service-fee estimates, used only when
+ * OPENAI_API_KEY isn't configured or the AI estimate call fails. Still not
+ * real market pricing either way -- there's no actual fee schedule wired in
+ * anywhere. See getEstimatedRates() below for the AI-estimated version.
  */
-const VALUE_PER_PRODUCT: Record<string, number> = {
+const FALLBACK_VALUE_PER_PRODUCT: Record<string, number> = {
   [OPPORTUNITY_TYPES.EXPIRING]: 500_000,
   [OPPORTUNITY_TYPES.RENEWAL_WATCH]: 350_000,
   [OPPORTUNITY_TYPES.NEW_APPROVAL]: 200_000,
   [OPPORTUNITY_TYPES.INACTIVE]: 750_000,
 };
+
+/**
+ * Asks OpenAI to estimate per-product NGN rates for each opportunity type,
+ * once per sync run. NOTE: this is still not real pricing data -- the model
+ * has no more grounded knowledge of actual Nigerian regulatory-consulting
+ * fee schedules than the static fallback does. It just replaces a fixed
+ * guess with a differently-sourced guess. Falls back to the static table
+ * if no API key is configured or the call fails/returns something unusable.
+ */
+async function getEstimatedRates(): Promise<Record<string, number>> {
+  const types = Object.values(OPPORTUNITY_TYPES);
+  const parsed = await openaiChatJSON(
+    "You estimate typical per-product service fees, in Nigerian Naira (NGN), that a Nigerian pharmaceutical regulatory affairs consulting firm might reasonably charge for different categories of NAFDAC-related work. " +
+      `Reply with strict JSON mapping each of these exact keys to a positive integer NGN amount: ${JSON.stringify(types)}. ` +
+      "These are rough per-product estimates for internal pipeline-value tracking, not a real quote. Reactivating a lapsed/inactive registration is normally more involved than routine renewal monitoring, which is itself more involved than lightweight post-approval support -- keep that relative ordering.",
+    "Estimate the per-product NGN rates now.",
+    { maxTokens: 300 },
+  );
+
+  if (parsed && types.every((t) => typeof parsed[t] === "number" && parsed[t] > 0)) {
+    return parsed as Record<string, number>;
+  }
+  return FALLBACK_VALUE_PER_PRODUCT;
+}
 
 const DAY_MS = 24 * 3600 * 1000;
 const EXPIRING_WINDOW_DAYS = 180;
@@ -349,13 +373,15 @@ export async function finalizeGreenBookSync(
     }
   }
 
+  const rates = await getEstimatedRates();
+
   await supabaseAdmin.from("opportunities").delete();
   const oppInserts: any[] = [];
   for (const candidates of Object.values(candidatesByType)) {
     const priorityMap = assignQuantilePriority(candidates, (c) => c.metric);
     for (const c of candidates) {
       const { priority, probability } = priorityMap.get(c)!;
-      const rate = VALUE_PER_PRODUCT[c.type];
+      const rate = rates[c.type];
       const count = c.products.length;
       oppInserts.push({
         company: c.manufacturer,

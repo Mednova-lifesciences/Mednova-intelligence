@@ -18,7 +18,11 @@ import {
   type PipelineStage,
 } from "@/lib/crm-queries";
 import { NoteEditor, NoteList } from "@/routes/crm/notes";
-import { getCompanyIntelligence, discoverContacts, generateEmail } from "@/lib/crm-integrations.functions";
+import { getCompanyIntelligence, discoverContacts, generateEmail, generateReport } from "@/lib/crm-integrations.functions";
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}
 
 export const Route = createFileRoute("/crm/companies/$id")({
   head: () => ({
@@ -51,6 +55,7 @@ function CompanyDetail() {
   const loadIntel = useServerFn(getCompanyIntelligence);
   const loadContacts = useServerFn(discoverContacts);
   const makeEmail = useServerFn(generateEmail);
+  const makeReport = useServerFn(generateReport);
 
   const [draftEmail, setDraftEmail] = useState<{
     subject: string;
@@ -59,6 +64,7 @@ function CompanyDetail() {
     signature: string;
   } | null>(null);
   const [generatingEmail, setGeneratingEmail] = useState(false);
+  const [generatingReport, setGeneratingReport] = useState(false);
   const emailRef = useRef<HTMLDivElement | null>(null);
   const [showAllOpps, setShowAllOpps] = useState<Record<string, boolean>>({});
 
@@ -129,30 +135,60 @@ function CompanyDetail() {
     }
   };
 
-  const onGenerateReport = () => {
-    const opps = (opportunities ?? []) as {
-      service_type: string | null;
-      product: string | null;
-      estimated_value: number;
-      priority: string;
-    }[];
-    const totalValue = opps.reduce((s, o) => s + Number(o.estimated_value || 0), 0);
-    const rows = opps
-      .map(
-        (o) =>
-          `<tr><td>${o.service_type ?? "Opportunity"}</td><td>${o.product ?? "—"}</td><td>${ngn(
-            o.estimated_value,
-          )}</td><td>${o.priority}</td></tr>`,
-      )
-      .join("");
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${company.name} — Company report</title>
+  const onGenerateReport = async () => {
+    setGeneratingReport(true);
+    try {
+      const opps = (opportunities ?? []) as {
+        service_type: string | null;
+        product: string | null;
+        estimated_value: number;
+        priority: string;
+        expiry_date?: string | null;
+      }[];
+      const totalValue = opps.reduce((s, o) => s + Number(o.estimated_value || 0), 0);
+
+      const aiReport = await makeReport({
+        data: {
+          company: company.name,
+          category: company.category,
+          country: company.country,
+          stage: company.stage,
+          estimatedValue: totalValue,
+          probability: company.probability,
+          productCount: (products ?? []).length,
+          contactCount: (contacts ?? []).length,
+          marketPosition: intel?.market_position ?? null,
+          about: intel?.about ?? null,
+          opportunities: opps.map((o) => ({
+            serviceType: o.service_type,
+            product: o.product,
+            estimatedValue: o.estimated_value,
+            priority: o.priority,
+            expiryDate: o.expiry_date ?? null,
+          })),
+        },
+      });
+
+      const rows = opps
+        .map(
+          (o) =>
+            `<tr><td>${escapeHtml(o.service_type ?? "Opportunity")}</td><td>${escapeHtml(
+              o.product ?? "—",
+            )}</td><td>${ngn(o.estimated_value)}</td><td>${escapeHtml(o.priority)}</td></tr>`,
+        )
+        .join("");
+      const findingsHtml = aiReport.key_findings.map((f) => `<li>${escapeHtml(f)}</li>`).join("");
+      const recsHtml = aiReport.recommendations.map((r) => `<li>${escapeHtml(r)}</li>`).join("");
+
+      const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(aiReport.title)}</title>
       <style>body{font-family:system-ui,sans-serif;color:#0f172a;padding:32px}h1{color:#071a2f}
       table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
       th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:left}th{background:#f1f5f9}
-      .kpi{display:flex;gap:16px;margin:16px 0}.kpi div{border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px}</style>
+      .kpi{display:flex;gap:16px;margin:16px 0}.kpi div{border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px}
+      ul{padding-left:20px;margin:8px 0}li{margin:4px 0}</style>
       </head><body>
-      <h1>${company.name}</h1>
-      <p>${company.category ?? "Biopharma"} · ${company.country ?? "Unknown"} · Stage: ${company.stage}</p>
+      <h1>${escapeHtml(aiReport.title)}</h1>
+      <p>${escapeHtml(company.category ?? "Biopharma")} · ${escapeHtml(company.country ?? "Unknown")} · Stage: ${escapeHtml(company.stage)}</p>
       <div class="kpi">
         <div><strong>${opps.length}</strong><br/>Opportunities</div>
         <div><strong>${ngn(totalValue)}</strong><br/>Pipeline value</div>
@@ -160,17 +196,28 @@ function CompanyDetail() {
         <div><strong>${(products ?? []).length}</strong><br/>Products</div>
         <div><strong>${(contacts ?? []).length}</strong><br/>Contacts</div>
       </div>
+      <h2>Executive summary</h2>
+      <p>${escapeHtml(aiReport.executive_summary)}</p>
+      <h2>Key findings</h2>
+      <ul>${findingsHtml || "<li>No findings generated.</li>"}</ul>
+      <h2>Recommendations</h2>
+      <ul>${recsHtml || "<li>No recommendations generated.</li>"}</ul>
       <h2>Opportunities</h2>
       <table><thead><tr><th>Service type</th><th>Product</th><th>Estimated value</th><th>Priority</th></tr></thead>
       <tbody>${rows || '<tr><td colspan="4">No opportunities</td></tr>'}</tbody></table>
-      <p style="margin-top:24px;font-size:12px;color:#64748b">Generated ${new Date().toLocaleString()} · MedNovaOS</p>
+      <p style="margin-top:24px;font-size:12px;color:#64748b">Generated ${new Date().toLocaleString()} · MedNovaOS${
+        aiReport.placeholder ? " · AI generation unavailable, showing data-only fallback" : " · AI-generated summary"
+      }</p>
       </body></html>`;
-    const w = window.open("", "_blank");
-    if (w) {
-      w.document.write(html);
-      w.document.close();
-      w.focus();
-      w.print();
+      const w = window.open("", "_blank");
+      if (w) {
+        w.document.write(html);
+        w.document.close();
+        w.focus();
+        w.print();
+      }
+    } finally {
+      setGeneratingReport(false);
     }
   };
 

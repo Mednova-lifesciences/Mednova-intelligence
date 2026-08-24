@@ -3,7 +3,9 @@ import {
   tavilyCompanyIntelligence,
   tavilyDiscoverContacts,
   generateOutreachEmail,
+  generateCompanyReport,
   sendEmail,
+  type CompanyReportInput,
 } from "./crm-integrations.server";
 
 export const getCompanyIntelligence = createServerFn({ method: "POST" })
@@ -32,3 +34,7 @@ export const sendEmailFn = createServerFn({ method: "POST" })
     (input: { to: string; cc: string; bcc: string; subject: string; body: string }) => input,
   )
   .handler(async ({ data }) => sendEmail(data));
+
+export const generateReport = createServerFn({ method: "POST" })
+  .inputValidator((input: CompanyReportInput) => input)
+  .handler(async ({ data }) => generateCompanyReport(data));

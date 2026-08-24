@@ -2,10 +2,68 @@
  * Server-only integration helpers for the MedNova OS CRM.
  *
  *   TAVILY_API_KEY  -> company intelligence + contact discovery (live)
- *   LOVABLE_API_KEY -> outreach email generation via Lovable AI Gateway (live)
+ *   OPENAI_API_KEY  -> outreach email generation, AI company reports, and
+ *                      opportunity value estimation (live)
+ *   OPENAI_MODEL    -> optional, defaults to gpt-5.6-luna
  *   RESEND_API_KEY  -> transactional email sending (optional; draft-only without it)
  *   FROM_EMAIL / SENDER_NAME / CONSULTATION_EMAIL -> sender identity
  */
+
+const DEFAULT_OPENAI_MODEL = "gpt-5.6-luna";
+
+/**
+ * Shared OpenAI chat-completion helper. Returns the parsed JSON response
+ * object, or null if OPENAI_API_KEY isn't configured or the call fails --
+ * callers are expected to fall back to a non-AI path in that case, same
+ * pattern as the rest of this file's Tavily/Resend integrations.
+ */
+export async function openaiChatJSON(
+  systemPrompt: string,
+  userPrompt: string,
+  opts: { maxTokens?: number } = {},
+): Promise<any | null> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    console.warn("[openai] OPENAI_API_KEY not set; skipping AI call");
+    return null;
+  }
+  const model = process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL;
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "content-type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        response_format: { type: "json_object" },
+        max_completion_tokens: opts.maxTokens ?? 1200,
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      console.error(`[openai] request failed [${res.status}] model=${model}: ${body}`);
+      return null;
+    }
+    const json = await res.json();
+    const raw = json.choices?.[0]?.message?.content ?? "";
+    if (!raw) {
+      console.error("[openai] empty response content", JSON.stringify(json).slice(0, 500));
+      return null;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch (err) {
+      console.error("[openai] failed to parse JSON response:", raw.slice(0, 500));
+      return null;
+    }
+  } catch (err) {
+    console.error("[openai] request error:", err);
+    return null;
+  }
+}
 
 export type CompanyIntelligence = {
   website: string;
@@ -291,58 +349,27 @@ export async function generateOutreachEmail(input: {
   const senderName = process.env.SENDER_NAME ?? "MedNova Lifesciences";
   const fromEmail = process.env.FROM_EMAIL ?? "info@mednovalife.com";
   const signature = `${senderName}\n${fromEmail}`;
-  const lovableKey = process.env.LOVABLE_API_KEY;
 
-  if (lovableKey) {
-    try {
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "content-type": "application/json", Authorization: `Bearer ${lovableKey}` },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash",
-          messages: [
-            {
-              role: "system",
-              content:
-                "You write concise B2B regulatory-consulting outreach emails for MedNova Lifesciences, a Nigerian pharmaceutical regulatory affairs firm. Reply with strict JSON: {\"subject\": string, \"body\": string}. No markdown, no signature block (it is appended separately). Keep the body under 180 words.",
-            },
-            {
-              role: "user",
-              content: JSON.stringify({
-                company: input.company,
-                contact_name: input.contactName,
-                category: input.category,
-                product: input.product,
-                regulatory_insight: input.recommendation,
-              }),
-            },
-          ],
-        }),
-      });
+  const parsed = await openaiChatJSON(
+    'You write concise B2B regulatory-consulting outreach emails for MedNova Lifesciences, a Nigerian pharmaceutical regulatory affairs firm. Reply with strict JSON: {"subject": string, "body": string}. No markdown, no signature block (it is appended separately). Keep the body under 180 words.',
+    JSON.stringify({
+      company: input.company,
+      contact_name: input.contactName,
+      category: input.category,
+      product: input.product,
+      regulatory_insight: input.recommendation,
+    }),
+    { maxTokens: 600 },
+  );
 
-      if (!res.ok) {
-        const body = await res.text();
-        console.error(`[lovable-ai] email generation failed [${res.status}]: ${body}`);
-      } else {
-        const json = (await res.json()) as {
-          choices?: { message?: { content?: string } }[];
-        };
-        const raw = json.choices?.[0]?.message?.content ?? "";
-        const cleaned = raw.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
-        const parsed = JSON.parse(cleaned) as { subject?: string; body?: string };
-        if (parsed.subject && parsed.body) {
-          return {
-            subject: parsed.subject,
-            recipient: input.contactEmail ?? "",
-            body: parsed.body,
-            signature,
-            placeholder: false,
-          };
-        }
-      }
-    } catch (err) {
-      console.error("[lovable-ai] email generation error:", err);
-    }
+  if (parsed?.subject && parsed?.body) {
+    return {
+      subject: String(parsed.subject),
+      recipient: input.contactEmail ?? "",
+      body: String(parsed.body),
+      signature,
+      placeholder: false,
+    };
   }
 
   const subject = `Regulatory support for ${input.company}${
@@ -365,6 +392,72 @@ export async function generateOutreachEmail(input: {
   ].join("\n");
 
   return { subject, recipient: input.contactEmail ?? "", body, signature, placeholder: true };
+}
+
+export type CompanyReportInput = {
+  company: string;
+  category: string | null;
+  country: string | null;
+  stage: string;
+  estimatedValue: number;
+  probability: number;
+  productCount: number;
+  contactCount: number;
+  marketPosition: string | null;
+  about: string | null;
+  opportunities: {
+    serviceType: string | null;
+    product: string | null;
+    estimatedValue: number;
+    priority: string;
+    expiryDate: string | null;
+  }[];
+};
+
+export type CompanyReport = {
+  title: string;
+  executive_summary: string;
+  key_findings: string[];
+  recommendations: string[];
+  generated_at: string;
+  placeholder: boolean;
+};
+
+export async function generateCompanyReport(input: CompanyReportInput): Promise<CompanyReport> {
+  const generatedAt = new Date().toISOString();
+
+  const parsed = await openaiChatJSON(
+    "You are a regulatory-affairs business analyst writing an internal account report for MedNova Lifesciences, a Nigerian pharmaceutical regulatory consulting firm, about a client company in their CRM. Reply with strict JSON: " +
+      '{"title": string, "executive_summary": string (2-4 sentences), "key_findings": string[] (3-6 specific bullet points), "recommendations": string[] (2-4 concrete next actions)}. ' +
+      "Base everything ONLY on the data provided in the user message -- do not invent financial figures, contacts, executives, or facts that are not present in the input. If the input is sparse, say so plainly rather than filling gaps with invented detail.",
+    JSON.stringify(input),
+    { maxTokens: 900 },
+  );
+
+  if (parsed?.title && parsed?.executive_summary) {
+    return {
+      title: String(parsed.title),
+      executive_summary: String(parsed.executive_summary),
+      key_findings: Array.isArray(parsed.key_findings) ? parsed.key_findings.map(String) : [],
+      recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations.map(String) : [],
+      generated_at: generatedAt,
+      placeholder: false,
+    };
+  }
+
+  const oppCount = input.opportunities.length;
+  return {
+    title: `${input.company} — Account Report`,
+    executive_summary: `${input.company} is at the ${input.stage} stage with an estimated pipeline value of ${input.estimatedValue.toLocaleString()} NGN across ${oppCount} tracked opportunit${oppCount === 1 ? "y" : "ies"}. AI report generation is unavailable right now -- showing a data-only fallback summary.`,
+    key_findings: [
+      `${oppCount} tracked opportunit${oppCount === 1 ? "y" : "ies"}`,
+      `${input.productCount} registered product${input.productCount === 1 ? "" : "s"} in the NAFDAC Green Book`,
+      `${input.contactCount} contact${input.contactCount === 1 ? "" : "s"} on file`,
+    ],
+    recommendations: ["Set OPENAI_API_KEY on the Vercel project to enable AI-generated reports."],
+    generated_at: generatedAt,
+    placeholder: true,
+  };
 }
 
 export async function sendEmail(payload: {
