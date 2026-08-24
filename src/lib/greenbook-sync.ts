@@ -245,6 +245,79 @@ export async function finalizeGreenBookSync(
   return { status: "success" as const, ...totals, finishedAt };
 }
 
+/**
+ * Unattended entry point for the scheduled sync (see /api/cron-sync). Runs
+ * batches in a plain server-side loop -- no browser tab required -- until
+ * either the catalog is fully synced or `timeBudgetMs` is used up.
+ *
+ * There's no dedicated column to persist a resume cursor between runs (no
+ * schema/migration access to this Supabase project), so the resume position
+ * is encoded as text in sync_history.message ("RESUME:<start>:<batchId>")
+ * on partial/error rows and parsed back out on the next run. A cron tick
+ * that finds NAFDAC still unreachable resumes from the same position next
+ * time rather than restarting the whole catalog from zero.
+ */
+export async function runCronSync(supabaseAdmin: any, timeBudgetMs = 270_000) {
+  const deadline = Date.now() + timeBudgetMs;
+
+  const { data: latest } = await supabaseAdmin
+    .from("sync_history")
+    .select("status,message,started_at")
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let start = 0;
+  let startedAt = new Date().toISOString();
+  let batchId = crypto.randomUUID();
+
+  if (latest?.status === "partial" || latest?.status === "error") {
+    const m = latest.message?.match(/^RESUME:(\d+):([0-9a-f-]+)/);
+    if (m) {
+      start = Number(m[1]);
+      batchId = m[2];
+      startedAt = latest.started_at;
+    }
+  }
+
+  const totals = { added: 0, updated: 0, unchanged: 0 };
+
+  try {
+    while (Date.now() < deadline) {
+      const result = await syncGreenBookBatch(supabaseAdmin, batchId, start, 100);
+      totals.added += result.added;
+      totals.updated += result.updated;
+      totals.unchanged += result.unchanged;
+
+      if (result.done) {
+        await finalizeGreenBookSync(supabaseAdmin, totals, startedAt);
+        return { status: "complete" as const, ...totals };
+      }
+      start = result.nextStart;
+    }
+
+    await supabaseAdmin.from("sync_history").insert({
+      status: "partial",
+      records_added: totals.added,
+      records_updated: totals.updated,
+      message: `RESUME:${start}:${batchId}`,
+      started_at: startedAt,
+      finished_at: new Date().toISOString(),
+    });
+    return { status: "partial" as const, nextStart: start, ...totals };
+  } catch (err: any) {
+    await supabaseAdmin.from("sync_history").insert({
+      status: "error",
+      records_added: totals.added,
+      records_updated: totals.updated,
+      message: `RESUME:${start}:${batchId} -- ${err?.message ?? String(err)}`,
+      started_at: startedAt,
+      finished_at: new Date().toISOString(),
+    });
+    return { status: "error" as const, message: err?.message ?? String(err) };
+  }
+}
+
 export async function recordSyncFailure(
   supabaseAdmin: any,
   message: string,

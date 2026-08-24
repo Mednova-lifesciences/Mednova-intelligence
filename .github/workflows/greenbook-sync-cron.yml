@@ -1,0 +1,29 @@
+name: Green Book sync (scheduled)
+
+# Runs every 5 hours, entirely on GitHub's servers -- independent of any
+# local machine. Vercel's own Cron Jobs are capped at once/day on the
+# Hobby plan, so this calls the deployed /api/cron-sync endpoint instead.
+#
+# Requires a repo secret CRON_SECRET matching the CRON_SECRET env var set
+# on the Vercel project (Settings -> Environment Variables).
+
+on:
+  schedule:
+    - cron: "0 */5 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Green Book sync
+        run: |
+          status=$(curl -sS -o response.json -w "%{http_code}" -X POST \
+            "https://mednovaos.mednovalife.com/api/cron-sync" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+          echo "HTTP status: $status"
+          cat response.json
+          if [ "$status" -ge 300 ]; then
+            echo "Sync request failed"
+            exit 1
+          fi

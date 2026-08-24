@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
 import { Route as RenewalsRouteImport } from './routes/renewals'
+import { Route as ApiCronSyncRouteImport } from './routes/api/cron-sync'
 import { Route as CrmIndexRouteImport } from './routes/crm/index'
 import { Route as CrmActivitiesRouteImport } from './routes/crm/activities'
 import { Route as CrmContactsRouteImport } from './routes/crm/contacts'
@@ -47,6 +48,11 @@ const OpportunitiesRoute = OpportunitiesRouteImport.update({
 const RenewalsRoute = RenewalsRouteImport.update({
   id: '/renewals',
   path: '/renewals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronSyncRoute = ApiCronSyncRouteImport.update({
+  id: '/api/cron-sync',
+  path: '/api/cron-sync',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrmIndexRoute = CrmIndexRouteImport.update({
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/opportunities': typeof OpportunitiesRoute
   '/renewals': typeof RenewalsRoute
+  '/api/cron-sync': typeof ApiCronSyncRoute
   '/crm/activities': typeof CrmActivitiesRoute
   '/crm/contacts': typeof CrmContactsRoute
   '/crm/notes': typeof CrmNotesRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/opportunities': typeof OpportunitiesRoute
   '/renewals': typeof RenewalsRoute
+  '/api/cron-sync': typeof ApiCronSyncRoute
   '/crm/activities': typeof CrmActivitiesRoute
   '/crm/contacts': typeof CrmContactsRoute
   '/crm/notes': typeof CrmNotesRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/opportunities': typeof OpportunitiesRoute
   '/renewals': typeof RenewalsRoute
+  '/api/cron-sync': typeof ApiCronSyncRoute
   '/crm/activities': typeof CrmActivitiesRoute
   '/crm/contacts': typeof CrmContactsRoute
   '/crm/notes': typeof CrmNotesRoute
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/'
     | '/opportunities'
     | '/renewals'
+    | '/api/cron-sync'
     | '/crm/activities'
     | '/crm/contacts'
     | '/crm/notes'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/'
     | '/opportunities'
     | '/renewals'
+    | '/api/cron-sync'
     | '/crm/activities'
     | '/crm/contacts'
     | '/crm/notes'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/'
     | '/opportunities'
     | '/renewals'
+    | '/api/cron-sync'
     | '/crm/activities'
     | '/crm/contacts'
     | '/crm/notes'
@@ -319,6 +331,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   OpportunitiesRoute: typeof OpportunitiesRoute
   RenewalsRoute: typeof RenewalsRoute
+  ApiCronSyncRoute: typeof ApiCronSyncRoute
   CrmActivitiesRoute: typeof CrmActivitiesRoute
   CrmContactsRoute: typeof CrmContactsRoute
   CrmNotesRoute: typeof CrmNotesRoute
@@ -363,6 +376,13 @@ declare module '@tanstack/react-router' {
       path: '/renewals'
       fullPath: '/renewals'
       preLoaderRoute: typeof RenewalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron-sync': {
+      id: '/api/cron-sync'
+      path: '/api/cron-sync'
+      fullPath: '/api/cron-sync'
+      preLoaderRoute: typeof ApiCronSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crm/': {
@@ -519,6 +539,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   OpportunitiesRoute: OpportunitiesRoute,
   RenewalsRoute: RenewalsRoute,
+  ApiCronSyncRoute: ApiCronSyncRoute,
   CrmActivitiesRoute: CrmActivitiesRoute,
   CrmContactsRoute: CrmContactsRoute,
   CrmNotesRoute: CrmNotesRoute,
