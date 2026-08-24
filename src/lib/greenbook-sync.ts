@@ -158,10 +158,104 @@ export async function syncGreenBookBatch(
   return { recordsTotal, processed: rows.length, added, updated, unchanged, nextStart, done };
 }
 
+const OPPORTUNITY_TYPES = {
+  EXPIRING: "Expiring Registration Opportunity",
+  RENEWAL_WATCH: "Manufacturer Renewal Watch",
+  NEW_APPROVAL: "New Approval Opportunity",
+  INACTIVE: "Registration Inactive Opportunity",
+} as const;
+
+/**
+ * Placeholder per-product service-fee estimates, differentiated by rough
+ * service complexity (reactivating a lapsed registration is more work than
+ * routine renewal monitoring, etc). These are NOT real market pricing --
+ * there's no pricing data source wired in. Swap in real numbers here if an
+ * actual fee schedule exists.
+ */
+const VALUE_PER_PRODUCT: Record<string, number> = {
+  [OPPORTUNITY_TYPES.EXPIRING]: 500_000,
+  [OPPORTUNITY_TYPES.RENEWAL_WATCH]: 350_000,
+  [OPPORTUNITY_TYPES.NEW_APPROVAL]: 200_000,
+  [OPPORTUNITY_TYPES.INACTIVE]: 750_000,
+};
+
+const DAY_MS = 24 * 3600 * 1000;
+const EXPIRING_WINDOW_DAYS = 180;
+const RECENT_APPROVAL_WINDOW_DAYS = 180;
+
+function isActiveStatus(status: string | null | undefined): boolean {
+  return (status ?? "").trim().toLowerCase() === "active";
+}
+
+/**
+ * Ranks candidates within ONE opportunity type by a type-appropriate
+ * urgency metric (higher = more urgent) and splits them into even thirds.
+ * Quantile-based rather than a fixed value threshold, so priority actually
+ * differentiates regardless of how large or small this dataset's numbers
+ * run -- a fixed "$5M+ = high" threshold either tags everything high (as it
+ * did before, when every manufacturer cleared it) or nothing, depending on
+ * the data; ranking within the group can't degenerate that way.
+ */
+function assignQuantilePriority<T>(items: T[], metric: (item: T) => number): Map<T, { priority: string; probability: number }> {
+  const sorted = [...items].sort((a, b) => metric(b) - metric(a));
+  const n = sorted.length;
+  const result = new Map<T, { priority: string; probability: number }>();
+  sorted.forEach((item, i) => {
+    const pct = n <= 1 ? 0 : i / n;
+    if (pct < 1 / 3) result.set(item, { priority: "high", probability: 80 });
+    else if (pct < 2 / 3) result.set(item, { priority: "medium", probability: 60 });
+    else result.set(item, { priority: "low", probability: 40 });
+  });
+  return result;
+}
+
+function opportunityServices(type: string): string {
+  switch (type) {
+    case OPPORTUNITY_TYPES.EXPIRING:
+      return "Renewal filing, dossier update, regulatory follow-up";
+    case OPPORTUNITY_TYPES.NEW_APPROVAL:
+      return "Post-approval compliance support, variation filing readiness";
+    case OPPORTUNITY_TYPES.INACTIVE:
+      return "Registration reactivation, lapsed-status resolution";
+    default:
+      return "Registration support, renewal monitoring";
+  }
+}
+
+function opportunityRecommendation(type: string, manufacturer: string, count: number): string {
+  const plural = count === 1 ? "" : "s";
+  switch (type) {
+    case OPPORTUNITY_TYPES.EXPIRING:
+      return `${manufacturer} has ${count} product${plural} expiring within ${EXPIRING_WINDOW_DAYS} days -- prioritize renewal outreach.`;
+    case OPPORTUNITY_TYPES.NEW_APPROVAL:
+      return `${manufacturer} recently received approval for ${count} product${plural} -- good window to offer ongoing regulatory support.`;
+    case OPPORTUNITY_TYPES.INACTIVE:
+      return `${manufacturer} has ${count} registration${plural} in inactive status -- potential reactivation engagement.`;
+    default:
+      return `Monitor ${manufacturer} for ${count} active registration${plural} and renewal opportunities.`;
+  }
+}
+
+type OpportunityCandidate = {
+  manufacturer: string;
+  type: string;
+  products: any[];
+  closeDate: string;
+  expiryDate: string | null;
+  metric: number;
+};
+
 /**
  * Rebuilds the opportunities/renewals tables from the current products
  * table and writes the final sync_history row. Call this once, after the
  * caller has looped syncGreenBookBatch to completion.
+ *
+ * Each manufacturer's products are bucketed into up to 4 opportunity types
+ * based on real signals (an "Emzor" with both products expiring soon AND
+ * a recent new approval gets TWO opportunity rows, one per type) instead
+ * of always generating a single generic "Manufacturer Renewal Watch" row
+ * regardless of what's actually happening with that manufacturer's
+ * portfolio.
  */
 export async function finalizeGreenBookSync(
   supabaseAdmin: any,
@@ -170,41 +264,118 @@ export async function finalizeGreenBookSync(
 ) {
   const { data: allProducts } = await supabaseAdmin
     .from("products")
-    .select("id,product_name,manufacturer,category,expiry_date,applicant,nafdac_number,status");
+    .select("id,product_name,manufacturer,category,expiry_date,approval_date,applicant,nafdac_number,status");
 
-  await supabaseAdmin.from("opportunities").delete();
-  const byManufacturer: Record<string, any[]> = {};
+  const now = Date.now();
+  const expiringCutoff = now + EXPIRING_WINDOW_DAYS * DAY_MS;
+  const recentApprovalCutoff = now - RECENT_APPROVAL_WINDOW_DAYS * DAY_MS;
+
+  type Buckets = { expiring: any[]; recentApproval: any[]; inactive: any[]; stable: any[] };
+  const byManufacturer: Record<string, Buckets> = {};
+
   for (const p of allProducts ?? []) {
     const owner = p.manufacturer ?? p.applicant;
-    if (owner) {
-      byManufacturer[owner] = byManufacturer[owner] || [];
-      byManufacturer[owner].push(p);
+    if (!owner) continue;
+    if (!byManufacturer[owner]) byManufacturer[owner] = { expiring: [], recentApproval: [], inactive: [], stable: [] };
+    const g = byManufacturer[owner];
+
+    const expiry = p.expiry_date ? new Date(p.expiry_date).getTime() : null;
+    const approval = p.approval_date ? new Date(p.approval_date).getTime() : null;
+
+    if (!isActiveStatus(p.status)) {
+      g.inactive.push(p);
+    } else if (expiry !== null && expiry >= now && expiry <= expiringCutoff) {
+      g.expiring.push(p);
+    } else if (approval !== null && approval >= recentApprovalCutoff) {
+      g.recentApproval.push(p);
+    } else {
+      g.stable.push(p);
     }
   }
+
+  const candidatesByType: Record<string, OpportunityCandidate[]> = {
+    [OPPORTUNITY_TYPES.EXPIRING]: [],
+    [OPPORTUNITY_TYPES.NEW_APPROVAL]: [],
+    [OPPORTUNITY_TYPES.INACTIVE]: [],
+    [OPPORTUNITY_TYPES.RENEWAL_WATCH]: [],
+  };
+
+  for (const [manufacturer, g] of Object.entries(byManufacturer)) {
+    if (g.expiring.length) {
+      const earliest = g.expiring.map((p) => p.expiry_date as string).filter(Boolean).sort()[0];
+      const daysToExpiry = (new Date(earliest).getTime() - now) / DAY_MS;
+      candidatesByType[OPPORTUNITY_TYPES.EXPIRING].push({
+        manufacturer,
+        type: OPPORTUNITY_TYPES.EXPIRING,
+        products: g.expiring,
+        closeDate: earliest,
+        expiryDate: earliest,
+        metric: -daysToExpiry, // sooner expiry -> higher urgency
+      });
+    }
+    if (g.recentApproval.length) {
+      const mostRecent = g.recentApproval.map((p) => p.approval_date as string).filter(Boolean).sort().reverse()[0];
+      const closeDate = new Date(new Date(mostRecent).getTime() + 90 * DAY_MS).toISOString().slice(0, 10);
+      const daysSinceApproval = (now - new Date(mostRecent).getTime()) / DAY_MS;
+      candidatesByType[OPPORTUNITY_TYPES.NEW_APPROVAL].push({
+        manufacturer,
+        type: OPPORTUNITY_TYPES.NEW_APPROVAL,
+        products: g.recentApproval,
+        closeDate,
+        expiryDate: null,
+        metric: -daysSinceApproval, // more recent -> higher urgency
+      });
+    }
+    if (g.inactive.length) {
+      candidatesByType[OPPORTUNITY_TYPES.INACTIVE].push({
+        manufacturer,
+        type: OPPORTUNITY_TYPES.INACTIVE,
+        products: g.inactive,
+        closeDate: new Date(now + 60 * DAY_MS).toISOString().slice(0, 10),
+        expiryDate: null,
+        metric: g.inactive.length,
+      });
+    }
+    if (g.stable.length) {
+      const expiryDates = g.stable.map((p) => p.expiry_date as string).filter(Boolean).sort();
+      candidatesByType[OPPORTUNITY_TYPES.RENEWAL_WATCH].push({
+        manufacturer,
+        type: OPPORTUNITY_TYPES.RENEWAL_WATCH,
+        products: g.stable,
+        closeDate: new Date(now + 180 * DAY_MS).toISOString().slice(0, 10),
+        expiryDate: expiryDates[0] ?? null,
+        metric: g.stable.length,
+      });
+    }
+  }
+
+  await supabaseAdmin.from("opportunities").delete();
   const oppInserts: any[] = [];
-  for (const [m, ps] of Object.entries(byManufacturer)) {
-    const expiryDates = ps
-      .map((p) => p.expiry_date)
-      .filter(Boolean)
-      .sort();
-    oppInserts.push({
-      company: m,
-      manufacturer: m,
-      product: ps.length === 1 ? ps[0].product_name : `${ps.length} products`,
-      category: ps[0].category ?? null,
-      product_count: ps.length,
-      estimated_value: ps.length * 500000,
-      services: "Registration support, renewal monitoring",
-      opportunity_type: "Manufacturer Renewal Watch",
-      service_type: "Manufacturer Renewal Watch",
-      status: "active",
-      priority: ps.length * 500000 > 5000000 ? "high" : ps.length * 500000 > 1000000 ? "medium" : "low",
-      probability: ps.length * 500000 > 5000000 ? 80 : ps.length * 500000 > 1000000 ? 60 : 40,
-      close_date: new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString().slice(0, 10),
-      expiry_date: expiryDates[0] ?? null,
-      recommendation: `Monitor ${m} for ${ps.length} active registration${ps.length === 1 ? "" : "s"} and renewal opportunities.`,
-      source_product_id: ps[0]?.id ?? null,
-    });
+  for (const candidates of Object.values(candidatesByType)) {
+    const priorityMap = assignQuantilePriority(candidates, (c) => c.metric);
+    for (const c of candidates) {
+      const { priority, probability } = priorityMap.get(c)!;
+      const rate = VALUE_PER_PRODUCT[c.type];
+      const count = c.products.length;
+      oppInserts.push({
+        company: c.manufacturer,
+        manufacturer: c.manufacturer,
+        product: count === 1 ? c.products[0].product_name : `${count} products`,
+        category: c.products[0]?.category ?? null,
+        product_count: count,
+        estimated_value: count * rate,
+        services: opportunityServices(c.type),
+        opportunity_type: c.type,
+        service_type: c.type,
+        status: "active",
+        priority,
+        probability,
+        close_date: c.closeDate,
+        expiry_date: c.expiryDate,
+        recommendation: opportunityRecommendation(c.type, c.manufacturer, count),
+        source_product_id: c.products[0]?.id ?? null,
+      });
+    }
   }
   if (oppInserts.length) {
     const { error: oppErr } = await supabaseAdmin.from("opportunities").insert(oppInserts);

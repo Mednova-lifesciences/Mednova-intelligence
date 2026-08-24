@@ -42,7 +42,7 @@ type TavilyResponse = { answer?: string; results?: TavilyResult[] };
 async function tavilySearch(
   apiKey: string,
   query: string,
-  opts: { depth?: "basic" | "advanced"; max?: number } = {},
+  opts: { depth?: "basic" | "advanced"; max?: number; includeDomains?: string[] } = {},
 ): Promise<TavilyResponse> {
   const res = await fetch("https://api.tavily.com/search", {
     method: "POST",
@@ -52,6 +52,7 @@ async function tavilySearch(
       search_depth: opts.depth ?? "advanced",
       include_answer: true,
       max_results: opts.max ?? 8,
+      ...(opts.includeDomains?.length ? { include_domains: opts.includeDomains } : {}),
     }),
   });
   if (!res.ok) {
@@ -67,6 +68,29 @@ const PHONE_RE = /(\+?\d[\d\s().-]{7,}\d)/;
 
 function pickUrl(results: TavilyResult[], predicate: (u: string) => boolean) {
   return results.map((r) => r.url ?? "").find((u) => u && predicate(u.toLowerCase())) ?? "";
+}
+
+function extractDomain(url: string): string | null {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "").toLowerCase() || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Picks an email from the search-result blob, preferring one on the
+ * company's own domain over the first email-looking string anywhere in the
+ * blended results (which could belong to a journalist, an unrelated
+ * company, or boilerplate on a page that merely mentions this company).
+ */
+function pickEmailForDomain(blob: string, domain: string | null): string {
+  const matches = blob.match(new RegExp(EMAIL_RE.source, "gi")) ?? [];
+  if (domain) {
+    const onDomain = matches.find((e) => e.toLowerCase().endsWith(`@${domain}`));
+    if (onDomain) return onDomain.toLowerCase();
+  }
+  return (matches[0] ?? "").toLowerCase();
 }
 
 function extractPeople(text: string): { name: string; role: string }[] {
@@ -109,13 +133,31 @@ export async function tavilyCompanyIntelligence(
         }),
       ]);
 
-      const all = [...(profile.results ?? []), ...(people.results ?? [])];
-      const blob = all.map((r) => `${r.title ?? ""} ${r.content ?? ""}`).join("\n");
-      const executives = extractPeople(blob);
-
       const website =
         pickUrl(profile.results ?? [], (u) => !u.includes("linkedin") && !u.includes("facebook")) ||
         `https://www.${host}`;
+      const domain = extractDomain(website);
+
+      // Once the company's own domain is known, run a second search scoped
+      // to JUST that domain for its published contact info -- far more
+      // likely to be the real contact page than a generic web-wide search.
+      let siteContact: TavilyResponse | null = null;
+      if (domain) {
+        try {
+          siteContact = await tavilySearch(apiKey, `${name} contact email phone address`, {
+            includeDomains: [domain],
+            max: 3,
+            depth: "basic",
+          });
+        } catch (err) {
+          console.error("[tavily] site-scoped contact search failed:", err);
+        }
+      }
+
+      const all = [...(profile.results ?? []), ...(people.results ?? []), ...(siteContact?.results ?? [])];
+      const blob = all.map((r) => `${r.title ?? ""} ${r.content ?? ""}`).join("\n");
+      const executives = extractPeople(blob);
+
       const linkedin =
         pickUrl(all, (u) => u.includes("linkedin.com/company")) ||
         pickUrl(all, (u) => u.includes("linkedin.com")) ||
@@ -132,7 +174,7 @@ export async function tavilyCompanyIntelligence(
           people.answer ??
           profile.answer ??
           `${name} operates in the pharmaceutical sector${manufacturer ? `, linked to ${manufacturer}` : ""}.`,
-        email: (blob.match(EMAIL_RE)?.[0] ?? "").toLowerCase(),
+        email: pickEmailForDomain(blob, domain),
         phone: blob.match(PHONE_RE)?.[0]?.trim() ?? "",
         key_executives: executives.slice(0, 3),
         decision_makers: executives.slice(3, 6),
@@ -181,11 +223,29 @@ export async function tavilyDiscoverContacts(name: string): Promise<DiscoveredCo
         `${name} contact email leadership team managing director regulatory affairs commercial`,
       );
       const results = res.results ?? [];
-      const blob = results.map((r) => `${r.title ?? ""} ${r.content ?? ""}`).join("\n");
+
+      const website = pickUrl(results, (u) => !u.includes("linkedin") && !u.includes("facebook"));
+      const domain = extractDomain(website);
+
+      let siteContact: TavilyResponse | null = null;
+      if (domain) {
+        try {
+          siteContact = await tavilySearch(apiKey, `${name} contact email phone address`, {
+            includeDomains: [domain],
+            max: 3,
+            depth: "basic",
+          });
+        } catch (err) {
+          console.error("[tavily] site-scoped contact search failed:", err);
+        }
+      }
+
+      const all = [...results, ...(siteContact?.results ?? [])];
+      const blob = all.map((r) => `${r.title ?? ""} ${r.content ?? ""}`).join("\n");
       const people = extractPeople(blob);
-      const email = (blob.match(EMAIL_RE)?.[0] ?? "").toLowerCase();
+      const email = pickEmailForDomain(blob, domain);
       const phone = blob.match(PHONE_RE)?.[0]?.trim() ?? "";
-      const linkedin = pickUrl(results, (u) => u.includes("linkedin.com"));
+      const linkedin = pickUrl(all, (u) => u.includes("linkedin.com"));
 
       if (people.length > 0) {
         return people.map((p) => ({
