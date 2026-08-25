@@ -343,6 +343,30 @@ export async function refreshCompanyFromOpportunities(company: Company): Promise
   return data as Company;
 }
 
+/**
+ * Bulk version of refreshCompanyFromOpportunities -- runs it across every
+ * company in the CRM (sequentially, to avoid hammering Supabase with a
+ * burst of concurrent writes for what's a low-frequency maintenance
+ * action). Returns how many were actually changed vs left alone.
+ */
+export async function refreshAllCompaniesFromOpportunities(): Promise<{
+  checked: number;
+  updated: number;
+}> {
+  const { data: companies, error } = await supabase.from("companies").select("*");
+  if (error) throw error;
+
+  let updated = 0;
+  for (const company of (companies ?? []) as Company[]) {
+    const before = JSON.stringify([company.estimated_value, company.priority, company.probability]);
+    const after = await refreshCompanyFromOpportunities(company);
+    const afterKey = JSON.stringify([after.estimated_value, after.priority, after.probability]);
+    if (after !== company && afterKey !== before) updated += 1;
+  }
+
+  return { checked: companies?.length ?? 0, updated };
+}
+
 export async function fetchCompanyOpportunities(company: Company) {
   const { data, error } = await supabase
     .from("opportunities")

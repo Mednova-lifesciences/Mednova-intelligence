@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Filter, Download, Plus } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Filter, Download, Plus, RefreshCw } from "lucide-react";
 import { CrmShell, CrmHeader, btnPrimary, btnGhost, inputClass, relativeDate } from "@/components/crm/CrmShell";
-import { fetchCompanies, PIPELINE_STAGES } from "@/lib/crm-queries";
+import { fetchCompanies, refreshAllCompaniesFromOpportunities, PIPELINE_STAGES } from "@/lib/crm-queries";
 
 export const Route = createFileRoute("/crm/companies/")({
   head: () => ({
@@ -23,10 +23,12 @@ export const Route = createFileRoute("/crm/companies/")({
 });
 
 function CompaniesPage() {
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState("");
   const [sort, setSort] = useState("recent");
   const [showFilters, setShowFilters] = useState(false);
+  const [refreshMessage, setRefreshMessage] = useState<string | null>(null);
 
   const { data: companies } = useQuery({
     queryKey: ["crm-companies", search, stage, sort],
@@ -34,6 +36,22 @@ function CompaniesPage() {
   });
 
   const rows = companies ?? [];
+
+  const refreshAll = useMutation({
+    mutationFn: refreshAllCompaniesFromOpportunities,
+    onSuccess: ({ checked, updated }) => {
+      setRefreshMessage(
+        updated === 0
+          ? `Checked ${checked} compan${checked === 1 ? "y" : "ies"} -- nothing changed (their current opportunities match what's already stored, or none matched at all).`
+          : `Updated ${updated} of ${checked} compan${checked === 1 ? "y" : "ies"} with current pipeline value/priority.`,
+      );
+      qc.invalidateQueries({ queryKey: ["crm-companies"] });
+      qc.invalidateQueries({ queryKey: ["crm-stats"] });
+    },
+    onError: (err: any) => {
+      setRefreshMessage(`Refresh failed: ${err?.message ?? "unknown error"}`);
+    },
+  });
 
   const exportCsv = () => {
     const header = ["Company", "Country", "Score", "Status", "Portfolio", "Stage", "Estimated value"];
@@ -62,6 +80,14 @@ function CompaniesPage() {
             <button className={btnGhost} onClick={exportCsv}>
               <Download className="h-4 w-4" /> Export
             </button>
+            <button
+              className={btnGhost}
+              onClick={() => refreshAll.mutate()}
+              disabled={refreshAll.isPending}
+              title="Recompute every company's pipeline value/priority from its current opportunities -- these fields only update automatically at creation time, never after a later Green Book sync."
+            >
+              <RefreshCw className="h-4 w-4" /> {refreshAll.isPending ? "Refreshing all…" : "Refresh all from opportunities"}
+            </button>
             <Link to="/opportunities" className={btnPrimary}>
               <Plus className="h-4 w-4" /> Add company
             </Link>
@@ -70,6 +96,11 @@ function CompaniesPage() {
       />
 
       <div className="px-8 py-6">
+        {refreshMessage && (
+          <p className="mb-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-foreground">
+            {refreshMessage}
+          </p>
+        )}
         {showFilters && (
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <input
