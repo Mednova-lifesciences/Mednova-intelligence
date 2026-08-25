@@ -74,9 +74,22 @@ function Dashboard() {
       let recordsTotal = 0;
       let processed = 0;
 
+      const runBatchWithRetry = async (attemptStart: number) => {
+        const maxAttempts = 4;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          try {
+            return await runBatch({ data: { batchId, start: attemptStart, length: 100 } });
+          } catch (err) {
+            if (attempt === maxAttempts) throw err;
+            await new Promise((r) => setTimeout(r, 1000 * 2 ** (attempt - 1)));
+          }
+        }
+        throw new Error("unreachable");
+      };
+
       try {
         while (true) {
-          const result = await runBatch({ data: { batchId, start } });
+          const result = await runBatchWithRetry(start);
           recordsTotal = result.recordsTotal;
           processed += result.processed;
           totals = {

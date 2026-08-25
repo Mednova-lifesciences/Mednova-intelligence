@@ -41,10 +41,13 @@ export async function syncGreenBookBatch(
 
   const url = `${GREENBOOK_URL}?${params.toString()}`;
   const maxRetries = 3;
+  const perAttemptTimeoutMs = 45_000;
   let lastErr: any = null;
   let json: any = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), perAttemptTimeoutMs);
     try {
       const res = await fetch(url, {
         headers: {
@@ -52,12 +55,16 @@ export async function syncGreenBookBatch(
           "X-Requested-With": "XMLHttpRequest",
           Referer: GREENBOOK_URL,
         },
+        signal: controller.signal,
       });
       if (!res.ok) throw new Error(`Green Book request failed ${res.status}`);
       json = await res.json();
       lastErr = null;
       break;
     } catch (err: any) {
+      if (err?.name === "AbortError") {
+        err = new Error(`Green Book request timed out after ${perAttemptTimeoutMs}ms`);
+      }
       lastErr = err;
       const cause = err?.cause ? ` (cause: ${err.cause.code ?? err.cause.message ?? err.cause})` : "";
       console.error(
@@ -66,6 +73,8 @@ export async function syncGreenBookBatch(
       if (attempt < maxRetries) {
         await new Promise((r) => setTimeout(r, 500 * 2 ** attempt));
       }
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
