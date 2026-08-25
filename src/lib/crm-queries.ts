@@ -293,6 +293,56 @@ function normalizeOpportunityRow(o: {
   };
 }
 
+/**
+ * estimated_value/priority/probability/score on a company are a ONE-TIME
+ * snapshot taken from the source opportunity when "Add to CRM" was clicked
+ * -- they never update again on their own, even after a later Green Book
+ * sync recalculates the underlying opportunities (opportunities.company
+ * matches this company's name, and stays matchable across syncs even
+ * though opportunity ids themselves are regenerated every sync). This
+ * recomputes them: estimated_value becomes the sum across ALL of this
+ * company's current opportunities (its full pipeline, not just the one
+ * that originally triggered the conversion), while priority/probability
+ * take the most urgent of that set.
+ */
+export async function refreshCompanyFromOpportunities(company: Company): Promise<Company> {
+  const { data: opps, error } = await supabase
+    .from("opportunities")
+    .select("estimated_value,priority,probability")
+    .eq("company", company.name);
+  if (error) throw error;
+  if (!opps || opps.length === 0) return company;
+
+  const priorityRank: Record<string, number> = { high: 3, medium: 2, low: 1 };
+  const totalValue = opps.reduce((s, o) => s + Number(o.estimated_value || 0), 0);
+  const mostUrgent = opps.reduce(
+    (best, o) => ((priorityRank[o.priority ?? "low"] ?? 0) > (priorityRank[best.priority ?? "low"] ?? 0) ? o : best),
+    opps[0],
+  );
+
+  const { data, error: updateError } = await supabase
+    .from("companies")
+    .update({
+      estimated_value: totalValue,
+      priority: mostUrgent.priority,
+      probability: mostUrgent.probability,
+      score: mostUrgent.probability,
+      last_activity_at: new Date().toISOString(),
+    })
+    .eq("id", company.id)
+    .select("*")
+    .single();
+  if (updateError) throw updateError;
+
+  await logActivity(
+    company.id,
+    "Refreshed from opportunities",
+    `Pipeline value and priority recalculated from ${opps.length} current opportunit${opps.length === 1 ? "y" : "ies"}.`,
+  );
+
+  return data as Company;
+}
+
 export async function fetchCompanyOpportunities(company: Company) {
   const { data, error } = await supabase
     .from("opportunities")

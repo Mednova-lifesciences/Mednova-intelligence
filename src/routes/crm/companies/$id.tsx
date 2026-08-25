@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { CrmShell, CrmHeader, CrmCard, btnPrimary, btnGhost, ngn } from "@/components/crm/CrmShell";
 import {
@@ -14,6 +14,7 @@ import {
   fetchEmails,
   insertContacts,
   moveCompanyStage,
+  refreshCompanyFromOpportunities,
   PIPELINE_STAGES,
   type PipelineStage,
 } from "@/lib/crm-queries";
@@ -99,6 +100,16 @@ function CompanyDetail() {
     qc.invalidateQueries({ queryKey: ["crm-notes", id] });
     qc.invalidateQueries({ queryKey: ["crm-activities", id] });
   };
+
+  const refreshFromOpps = useMutation({
+    mutationFn: () => refreshCompanyFromOpportunities(company!),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["crm-company", id] });
+      qc.invalidateQueries({ queryKey: ["crm-companies"] });
+      qc.invalidateQueries({ queryKey: ["crm-activities", id] });
+      qc.invalidateQueries({ queryKey: ["crm-stats"] });
+    },
+  });
 
   if (!company) {
     return (
@@ -249,8 +260,16 @@ function CompanyDetail() {
                 </option>
               ))}
             </select>
-            <button className={btnGhost} onClick={onGenerateReport}>
-              Generate report
+            <button
+              className={btnGhost}
+              onClick={() => refreshFromOpps.mutate()}
+              disabled={refreshFromOpps.isPending}
+              title="Recompute pipeline value/priority from this company's current opportunities -- these fields are only set once, when the company is first added to the CRM, and don't update on their own afterward."
+            >
+              {refreshFromOpps.isPending ? "Refreshing…" : "Refresh from opportunities"}
+            </button>
+            <button className={btnGhost} onClick={onGenerateReport} disabled={generatingReport}>
+              {generatingReport ? "Generating…" : "Generate report"}
             </button>
             <button className={btnPrimary} onClick={onGenerateEmail} disabled={generatingEmail}>
               {generatingEmail ? "Generating…" : "Generate email"}
